@@ -1,0 +1,90 @@
+name: Backend CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    name: Tests, PHPStan & code style
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: hoffman
+          POSTGRES_USER: hoffman
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U hoffman"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, bcmath, gd, zip, pdo, pdo_pgsql, pgsql, redis
+          coverage: none
+          tools: composer:v2
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Prepare .env.testing
+        run: |
+          cp .env.example .env.testing
+          sed -i "s/^APP_ENV=.*/APP_ENV=testing/" .env.testing
+          sed -i "s/^DB_CONNECTION=.*/DB_CONNECTION=pgsql/" .env.testing
+          sed -i "s/^DB_HOST=.*/DB_HOST=127.0.0.1/" .env.testing
+          sed -i "s/^DB_PORT=.*/DB_PORT=5432/" .env.testing
+          sed -i "s/^DB_DATABASE=.*/DB_DATABASE=hoffman/" .env.testing
+          sed -i "s/^DB_USERNAME=.*/DB_USERNAME=hoffman/" .env.testing
+          sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=secret/" .env.testing
+          sed -i "s/^REDIS_HOST=.*/REDIS_HOST=127.0.0.1/" .env.testing
+          sed -i "s/^REDIS_PORT=.*/REDIS_PORT=6379/" .env.testing
+
+      - name: Install composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Generate application key
+        run: php artisan key:generate --env=testing
+
+      - name: Run database migrations
+        run: php artisan migrate --env=testing --force
+
+      - name: Run test suite
+        run: php artisan test
+
+      - name: Run PHPStan
+        run: composer run analyse
+
+      - name: Check code style (dry run)
+        run: composer run cs-fix -- --dry-run
