@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\VerificationStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -16,6 +17,9 @@ class VerificationRequest extends Model
         'user_id',
         'reviewer_id',
         'status',
+        'last_name',
+        'first_name',
+        'phone',
         'institution_name',
         'graduation_year',
         'document_path',
@@ -31,6 +35,7 @@ class VerificationRequest extends Model
     protected function casts(): array
     {
         return [
+            'status' => VerificationStatus::class,
             'graduation_year' => 'integer',
             'reviewed_at' => 'datetime',
         ];

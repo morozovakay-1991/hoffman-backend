@@ -2,7 +2,13 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
+use App\Http\Controllers\Api\V1\VerificationController;
 use Illuminate\Support\Facades\Route;
+
+Route::prefix('v1/verification')->middleware('auth:sanctum')->group(function () {
+    Route::post('submit', [VerificationController::class, 'submit']);
+    Route::get('status', [VerificationController::class, 'status']);
+});
 
 Route::prefix('v1/auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
