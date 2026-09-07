@@ -34,7 +34,18 @@ class UserFactory extends Factory
             'google_id' => null,
             'graduate_status' => GraduateStatus::Unverified,
             'timezone' => fake()->timezone(),
+            'is_admin' => false,
         ];
+    }
+
+    /**
+     * Indicate that the user can access the Filament admin panel.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_admin' => true,
+        ]);
     }
 
     /**
