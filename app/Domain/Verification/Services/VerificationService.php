@@ -42,4 +42,38 @@ class VerificationService
     {
         return $user->verificationRequests()->latest('id')->first();
     }
+
+    /**
+     * Confirm a verification request and mark the applicant as a confirmed graduate.
+     */
+    public function confirm(VerificationRequest $verificationRequest, User $reviewer): VerificationRequest
+    {
+        $verificationRequest->update([
+            'status' => VerificationStatus::Confirmed,
+            'reviewer_id' => $reviewer->id,
+            'rejection_reason' => null,
+            'reviewed_at' => now(),
+        ]);
+
+        $verificationRequest->user->update(['graduate_status' => GraduateStatus::Confirmed]);
+
+        return $verificationRequest;
+    }
+
+    /**
+     * Reject a verification request and mark the applicant's graduate status as rejected.
+     */
+    public function reject(VerificationRequest $verificationRequest, User $reviewer, string $reason): VerificationRequest
+    {
+        $verificationRequest->update([
+            'status' => VerificationStatus::Rejected,
+            'reviewer_id' => $reviewer->id,
+            'rejection_reason' => $reason,
+            'reviewed_at' => now(),
+        ]);
+
+        $verificationRequest->user->update(['graduate_status' => GraduateStatus::Rejected]);
+
+        return $verificationRequest;
+    }
 }

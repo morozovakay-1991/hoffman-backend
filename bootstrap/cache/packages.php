@@ -166,4 +166,11 @@
       1 => 'Sentry\\Laravel\\Tracing\\ServiceProvider',
     ),
   ),
+  'spatie/laravel-permission' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Spatie\\Permission\\PermissionServiceProvider',
+    ),
+  ),
 );

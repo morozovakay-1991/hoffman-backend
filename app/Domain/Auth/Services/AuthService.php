@@ -2,6 +2,7 @@
 
 namespace App\Domain\Auth\Services;
 
+use App\Domain\Auth\Exceptions\AccountBlockedException;
 use App\Domain\Auth\Exceptions\InvalidCredentialsException;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -33,6 +34,7 @@ class AuthService
      * @return array{user: User, token: string}
      *
      * @throws InvalidCredentialsException
+     * @throws AccountBlockedException
      */
     public function login(array $credentials): array
     {
@@ -40,6 +42,10 @@ class AuthService
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             throw new InvalidCredentialsException();
+        }
+
+        if ($user->isBlocked()) {
+            throw new AccountBlockedException();
         }
 
         return [

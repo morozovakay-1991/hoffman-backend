@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -20,6 +21,8 @@ class User extends Authenticatable implements FilamentUser
 
     /** @use HasFactory<UserFactory> */
     use HasFactory;
+
+    use HasRoles;
 
     use Notifiable;
 
@@ -36,7 +39,6 @@ class User extends Authenticatable implements FilamentUser
         'google_id',
         'graduate_status',
         'timezone',
-        'is_admin',
     ];
 
     /**
@@ -60,13 +62,18 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'graduate_status' => GraduateStatus::class,
-            'is_admin' => 'boolean',
+            'blocked_at' => 'datetime',
         ];
     }
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->is_admin;
+        return $this->hasAnyRole(['super_admin', 'admin']);
+    }
+
+    public function isBlocked(): bool
+    {
+        return $this->blocked_at !== null;
     }
 
     /**

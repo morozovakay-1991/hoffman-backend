@@ -13,6 +13,7 @@
         "laravel/tinker": "^2.9",
         "predis/predis": "^3.6",
         "sentry/sentry-laravel": "^4.27",
+        "spatie/laravel-permission": "^6.25",
         "spatie/simple-excel": "^3.5"
     },
     "require-dev": {

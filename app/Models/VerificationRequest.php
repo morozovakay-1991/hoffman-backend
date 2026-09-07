@@ -3,11 +3,16 @@
 namespace App\Models;
 
 use App\Enums\VerificationStatus;
+use Database\Factories\VerificationRequestFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class VerificationRequest extends Model
 {
+    /** @use HasFactory<VerificationRequestFactory> */
+    use HasFactory;
+
     /**
      * The attributes that are mass assignable.
      *

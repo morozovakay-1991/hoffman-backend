@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\GraduateStatus;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -34,7 +35,6 @@ class UserFactory extends Factory
             'google_id' => null,
             'graduate_status' => GraduateStatus::Unverified,
             'timezone' => fake()->timezone(),
-            'is_admin' => false,
         ];
     }
 
@@ -43,9 +43,9 @@ class UserFactory extends Factory
      */
     public function admin(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'is_admin' => true,
-        ]);
+        return $this->afterCreating(function (User $user) {
+            $user->assignRole('admin');
+        });
     }
 
     /**
