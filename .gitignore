@@ -25,3 +25,4 @@ yarn-error.log
 # FVM Version Cache
 .fvm/
 .php-cs-fixer.cache
+storage/logs/*.log
