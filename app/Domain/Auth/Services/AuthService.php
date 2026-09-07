@@ -39,7 +39,7 @@ class AuthService
         $user = User::where('email', $credentials['email'])->first();
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
-            throw new InvalidCredentialsException;
+            throw new InvalidCredentialsException();
         }
 
         return [
