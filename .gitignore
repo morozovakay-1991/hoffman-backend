@@ -28,3 +28,4 @@ yarn-error.log
 .fvm/
 .php-cs-fixer.cache
 storage/logs/*.log
+storage/framework/views/
