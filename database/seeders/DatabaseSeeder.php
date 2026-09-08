@@ -21,5 +21,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(LegalDocumentSeeder::class);
+        $this->call(DiaryDaySeeder::class);
     }
 }

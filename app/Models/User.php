@@ -115,4 +115,12 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(DeletionRequest::class);
     }
+
+    /**
+     * @return HasMany<DiaryEntry, $this>
+     */
+    public function diaryEntries(): HasMany
+    {
+        return $this->hasMany(DiaryEntry::class);
+    }
 }
