@@ -19,6 +19,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class TopicResource extends Resource
 {
@@ -54,7 +55,9 @@ class TopicResource extends Resource
                     ->label('Опубликована'),
                 CheckboxList::make('tools')
                     ->label('Инструменты')
-                    ->relationship('tools')
+                    ->relationship('tools', modifyQueryUsing: fn (Builder $query): Builder => $query
+                        ->select('tools.id')
+                        ->selectRaw('CAST(tools.title AS TEXT) as title'))
                     ->getOptionLabelFromRecordUsing(fn (Tool $record): string => $record->title)
                     ->searchable()
                     ->bulkToggleable()
@@ -62,7 +65,9 @@ class TopicResource extends Resource
                     ->columnSpanFull(),
                 CheckboxList::make('meditations')
                     ->label('Медитации')
-                    ->relationship('meditations')
+                    ->relationship('meditations', modifyQueryUsing: fn (Builder $query): Builder => $query
+                        ->select('meditations.id')
+                        ->selectRaw('CAST(meditations.title AS TEXT) as title'))
                     ->getOptionLabelFromRecordUsing(fn (Meditation $record): string => $record->title)
                     ->searchable()
                     ->bulkToggleable()

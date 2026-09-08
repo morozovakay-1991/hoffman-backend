@@ -3,6 +3,8 @@
 namespace Tests\Feature\Filament;
 
 use App\Filament\Resources\TopicResource\Pages\ListTopics;
+use App\Models\Meditation;
+use App\Models\Tool;
 use App\Models\Topic;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -45,5 +47,26 @@ class TopicResourceTest extends TestCase
         $superAdmin = User::factory()->superAdmin()->create();
 
         $this->actingAs($superAdmin)->get('/backend/topics')->assertSuccessful();
+    }
+
+    public function test_an_admin_can_open_the_create_topic_page(): void
+    {
+        $admin = User::factory()->admin()->create();
+        Tool::factory()->create(['title' => ['ru' => 'Дыхательная техника']]);
+        Meditation::factory()->create(['title' => ['ru' => 'Утренняя медитация']]);
+
+        $this->actingAs($admin)->get('/backend/topics/create')->assertSuccessful();
+    }
+
+    public function test_an_admin_can_open_the_edit_topic_page_with_related_records(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $topic = Topic::factory()->create();
+        $tool = Tool::factory()->create(['title' => ['ru' => 'Дыхательная техника']]);
+        $meditation = Meditation::factory()->create(['title' => ['ru' => 'Утренняя медитация']]);
+        $topic->tools()->attach($tool);
+        $topic->meditations()->attach($meditation);
+
+        $this->actingAs($admin)->get("/backend/topics/{$topic->id}/edit")->assertSuccessful();
     }
 }
