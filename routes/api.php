@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\ToolController;
 use App\Http\Controllers\Api\V1\TopicController;
 use App\Http\Controllers\Api\V1\VerificationController;
+use App\Http\Controllers\Api\V1\WebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1/verification')->middleware('auth:sanctum')->group(function () {
@@ -40,6 +41,14 @@ Route::prefix('v1/billing')->group(function () {
         Route::post('cancel', [BillingController::class, 'cancel']);
         Route::post('payment-method', [BillingController::class, 'paymentMethod']);
     });
+});
+
+// Payment provider callbacks: public (no Sanctum auth — providers can't hold a bearer
+// token), authenticated instead via each provider's own signature scheme, and kept
+// under a dedicated rate limit separate from the general API traffic.
+Route::prefix('webhooks')->middleware('throttle:webhooks')->group(function () {
+    Route::post('stripe', [WebhookController::class, 'stripe']);
+    Route::post('cloudpayments', [WebhookController::class, 'cloudpayments']);
 });
 
 Route::prefix('v1/diary')->middleware('auth:sanctum')->group(function () {
