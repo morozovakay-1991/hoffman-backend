@@ -29,7 +29,7 @@ class SubscriptionFactory extends Factory
             'auto_renew' => true,
             'starts_at' => $startsAt,
             'trial_ends_at' => null,
-            'expires_at' => fake()->dateTimeBetween($startsAt, '+1 year'),
+            'expires_at' => fake()->dateTimeBetween('now', '+1 year'),
             'cancelled_at' => null,
             'metadata' => [],
         ];
