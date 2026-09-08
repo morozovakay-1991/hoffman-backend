@@ -7,14 +7,14 @@ use App\Domain\Content\Services\AccessLevelService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MeditationResource;
 use App\Models\Meditation;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Storage;
 
 class MeditationController extends Controller
 {
-    public function __construct(private readonly AccessLevelService $accessLevelService)
-    {
-    }
+    public function __construct(private readonly AccessLevelService $accessLevelService) {}
 
     /**
      * List published meditations.
@@ -39,7 +39,7 @@ class MeditationController extends Controller
         $meditations->each(function (Meditation $meditation) use ($user) {
             $meditation->setAttribute(
                 'is_locked',
-                !$this->accessLevelService->canAccess($user, AccessLevelService::CONTENT_MEDITATION, $meditation),
+                ! $this->accessLevelService->canAccess($user, AccessLevelService::CONTENT_MEDITATION, $meditation),
             );
         });
 
@@ -55,19 +55,49 @@ class MeditationController extends Controller
      */
     public function show(Request $request, Meditation $meditation): MeditationResource
     {
-        if (!$meditation->is_published) {
+        if (! $meditation->is_published) {
             abort(404);
         }
 
         $user = $request->user('sanctum');
 
-        if (!$this->accessLevelService->canAccess($user, AccessLevelService::CONTENT_MEDITATION, $meditation)) {
-            throw new AccessDeniedException();
+        if (! $this->accessLevelService->canAccess($user, AccessLevelService::CONTENT_MEDITATION, $meditation)) {
+            throw new AccessDeniedException;
         }
 
         $meditation->setAttribute('is_locked', false);
         $meditation->load('topics');
 
         return new MeditationResource($meditation);
+    }
+
+    /**
+     * Issue a temporary, presigned URL to the meditation's audio file on the S3 disk.
+     *
+     * Access is checked the same way as `show`: a direct request for one item's audio
+     * is explicitly denied (403 ACCESS_DENIED) rather than flagged. The URL is valid
+     * for 1 hour, after which the client must request a fresh one.
+     */
+    public function audio(Request $request, Meditation $meditation): JsonResponse
+    {
+        if (! $meditation->is_published) {
+            abort(404);
+        }
+
+        $user = $request->user('sanctum');
+
+        if (! $this->accessLevelService->canAccess($user, AccessLevelService::CONTENT_MEDITATION, $meditation)) {
+            throw new AccessDeniedException;
+        }
+
+        $expiresAt = now()->addHour();
+        $url = Storage::disk('s3')->temporaryUrl($meditation->audio_path, $expiresAt);
+
+        return response()->json([
+            'data' => [
+                'url' => $url,
+                'expires_at' => $expiresAt->toIso8601String(),
+            ],
+        ]);
     }
 }

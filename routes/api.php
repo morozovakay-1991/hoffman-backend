@@ -26,6 +26,7 @@ Route::prefix('v1/legal-documents')->group(function () {
 Route::prefix('v1/meditations')->group(function () {
     Route::get('/', [MeditationController::class, 'index']);
     Route::get('{meditation}', [MeditationController::class, 'show']);
+    Route::get('{meditation}/audio', [MeditationController::class, 'audio']);
 });
 
 Route::prefix('v1/tools')->group(function () {
