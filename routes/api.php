@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\ArticleController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BillingController;
 use App\Http\Controllers\Api\V1\DiaryController;
 use App\Http\Controllers\Api\V1\LegalDocumentController;
 use App\Http\Controllers\Api\V1\MeditationController;
@@ -30,6 +31,16 @@ Route::prefix('v1/profile')->middleware('auth:sanctum')->group(function () {
 });
 
 Route::get('v1/subscription', [SubscriptionController::class, 'show'])->middleware('auth:sanctum');
+
+Route::prefix('v1/billing')->group(function () {
+    Route::get('plans', [BillingController::class, 'plans']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('checkout-session', [BillingController::class, 'checkoutSession']);
+        Route::post('cancel', [BillingController::class, 'cancel']);
+        Route::post('payment-method', [BillingController::class, 'paymentMethod']);
+    });
+});
 
 Route::prefix('v1/diary')->middleware('auth:sanctum')->group(function () {
     Route::get('days', [DiaryController::class, 'index']);

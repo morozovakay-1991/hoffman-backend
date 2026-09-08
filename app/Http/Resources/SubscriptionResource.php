@@ -19,13 +19,17 @@ class SubscriptionResource extends JsonResource
         return [
             'status' => $this->status,
             'provider' => $this->provider,
+            'payment_provider' => $this->payment_provider,
             'product_id' => $this->product_id,
+            'currency' => $this->currency,
+            'country' => $this->country,
             'auto_renew' => $this->auto_renew,
             'is_active' => $this->isActive(),
             'starts_at' => $this->starts_at,
             'trial_ends_at' => $this->trial_ends_at,
             'expires_at' => $this->expires_at,
             'cancelled_at' => $this->cancelled_at,
+            'cancel_at' => $this->cancel_at,
         ];
     }
 }

@@ -42,4 +42,17 @@ return [
         'storage_bucket' => env('FIREBASE_STORAGE_BUCKET'),
     ],
 
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+        'success_url' => env('STRIPE_SUCCESS_URL', env('APP_URL').'/billing/success'),
+        'cancel_url' => env('STRIPE_CANCEL_URL', env('APP_URL').'/billing/cancel'),
+        'return_url' => env('STRIPE_RETURN_URL', env('APP_URL').'/billing/account'),
+    ],
+
+    'cloudpayments' => [
+        'public_id' => env('CLOUDPAYMENTS_PUBLIC_ID'),
+        'api_secret' => env('CLOUDPAYMENTS_API_SECRET'),
+        'base_url' => env('CLOUDPAYMENTS_BASE_URL', 'https://api.cloudpayments.ru'),
+    ],
+
 ];
