@@ -49,6 +49,16 @@ class UserFactory extends Factory
     }
 
     /**
+     * Indicate that the user has full super-admin access to the Filament admin panel.
+     */
+    public function superAdmin(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $user->assignRole('super_admin');
+        });
+    }
+
+    /**
      * Indicate that the model's email address should be unverified.
      */
     public function unverified(): static
