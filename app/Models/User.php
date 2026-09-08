@@ -88,6 +88,14 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * @return HasMany<Invoice, $this>
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    /**
      * @return HasMany<VerificationRequest, $this>
      */
     public function verificationRequests(): HasMany

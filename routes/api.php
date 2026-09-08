@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\ArticleController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BillingController;
 use App\Http\Controllers\Api\V1\DiaryController;
+use App\Http\Controllers\Api\V1\InvoiceController;
 use App\Http\Controllers\Api\V1\LegalDocumentController;
 use App\Http\Controllers\Api\V1\MeditationController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
@@ -37,6 +38,8 @@ Route::prefix('v1/billing')->group(function () {
     Route::get('plans', [BillingController::class, 'plans']);
 
     Route::middleware('auth:sanctum')->group(function () {
+        Route::get('invoices', [InvoiceController::class, 'index']);
+        Route::get('invoices/{invoice}', [InvoiceController::class, 'show']);
         Route::post('checkout-session', [BillingController::class, 'checkoutSession']);
         Route::post('cancel', [BillingController::class, 'cancel']);
         Route::post('payment-method', [BillingController::class, 'paymentMethod']);
