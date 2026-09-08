@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\V1\DiaryController;
 use App\Http\Controllers\Api\V1\LegalDocumentController;
 use App\Http\Controllers\Api\V1\MeditationController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
+use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\ToolController;
 use App\Http\Controllers\Api\V1\TopicController;
 use App\Http\Controllers\Api\V1\VerificationController;
@@ -15,6 +17,19 @@ Route::prefix('v1/verification')->middleware('auth:sanctum')->group(function () 
     Route::post('submit', [VerificationController::class, 'submit']);
     Route::get('status', [VerificationController::class, 'status']);
 });
+
+Route::prefix('v1/profile')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [ProfileController::class, 'show']);
+    Route::patch('/', [ProfileController::class, 'update']);
+    Route::patch('email', [ProfileController::class, 'updateEmail']);
+    Route::post('email/confirm', [ProfileController::class, 'confirmEmail']);
+    Route::patch('password', [ProfileController::class, 'updatePassword']);
+    Route::patch('notifications', [ProfileController::class, 'updateNotifications']);
+    Route::post('deletion-request', [ProfileController::class, 'requestDeletion']);
+    Route::delete('/', [ProfileController::class, 'destroy']);
+});
+
+Route::get('v1/subscription', [SubscriptionController::class, 'show'])->middleware('auth:sanctum');
 
 Route::prefix('v1/diary')->middleware('auth:sanctum')->group(function () {
     Route::get('days', [DiaryController::class, 'index']);

@@ -4,9 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $attempts
+ * @property Carbon $expires_at
+ * @property Carbon|null $confirmed_at
+ */
 class EmailChangeRequest extends Model
 {
+    public const MAX_ATTEMPTS = 5;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -17,6 +25,7 @@ class EmailChangeRequest extends Model
         'old_email',
         'new_email',
         'code',
+        'attempts',
         'expires_at',
         'confirmed_at',
     ];
@@ -29,9 +38,20 @@ class EmailChangeRequest extends Model
     protected function casts(): array
     {
         return [
+            'attempts' => 'integer',
             'expires_at' => 'datetime',
             'confirmed_at' => 'datetime',
         ];
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->expires_at->isPast();
+    }
+
+    public function hasTooManyAttempts(): bool
+    {
+        return $this->attempts >= self::MAX_ATTEMPTS;
     }
 
     /**

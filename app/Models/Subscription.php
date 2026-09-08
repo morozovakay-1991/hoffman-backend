@@ -55,4 +55,10 @@ class Subscription extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function isActive(): bool
+    {
+        return in_array($this->status, ['active', 'trialing'], true)
+            && ($this->expires_at === null || $this->expires_at->isFuture());
+    }
 }
