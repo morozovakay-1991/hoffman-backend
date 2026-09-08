@@ -14,7 +14,9 @@ use Illuminate\Support\Facades\Storage;
 
 class MeditationController extends Controller
 {
-    public function __construct(private readonly AccessLevelService $accessLevelService) {}
+    public function __construct(private readonly AccessLevelService $accessLevelService)
+    {
+    }
 
     /**
      * List published meditations.
@@ -62,7 +64,7 @@ class MeditationController extends Controller
         $user = $request->user('sanctum');
 
         if (! $this->accessLevelService->canAccess($user, AccessLevelService::CONTENT_MEDITATION, $meditation)) {
-            throw new AccessDeniedException;
+            throw new AccessDeniedException();
         }
 
         $meditation->setAttribute('is_locked', false);
@@ -87,7 +89,7 @@ class MeditationController extends Controller
         $user = $request->user('sanctum');
 
         if (! $this->accessLevelService->canAccess($user, AccessLevelService::CONTENT_MEDITATION, $meditation)) {
-            throw new AccessDeniedException;
+            throw new AccessDeniedException();
         }
 
         $expiresAt = now()->addHour();
