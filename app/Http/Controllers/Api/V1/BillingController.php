@@ -14,7 +14,9 @@ use Illuminate\Http\Request;
 
 class BillingController extends Controller
 {
-    public function __construct(private readonly BillingService $billingService) {}
+    public function __construct(private readonly BillingService $billingService)
+    {
+    }
 
     public function plans(): JsonResponse
     {
@@ -69,7 +71,7 @@ class BillingController extends Controller
             ->first();
 
         if (! $subscription) {
-            throw new SubscriptionNotFoundException;
+            throw new SubscriptionNotFoundException();
         }
 
         return $subscription;
