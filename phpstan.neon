@@ -7,6 +7,10 @@ parameters:
 
     level: 5
 
+    # All models here declare casts via the `casts(): array` method (Laravel 11+ style)
+    # rather than the legacy `$casts` property, so Larastan needs this to read them.
+    parseModelCastsMethod: true
+
     bootstrapFiles:
         - bootstrap/app.php
 
