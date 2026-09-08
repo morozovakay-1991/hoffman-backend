@@ -12,7 +12,9 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class DiaryController extends Controller
 {
-    public function __construct(private readonly DiaryService $diaryService) {}
+    public function __construct(private readonly DiaryService $diaryService)
+    {
+    }
 
     /**
      * List all 100 diary days for the authenticated user, each flagged with

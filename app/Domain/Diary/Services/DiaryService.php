@@ -63,7 +63,7 @@ class DiaryService
         $status = $this->statusFor($day->day_number, $completedCount);
 
         if ($status === self::STATUS_LOCKED) {
-            throw new DayLockedException;
+            throw new DayLockedException();
         }
 
         $day->setAttribute('status', $status);
@@ -96,7 +96,7 @@ class DiaryService
         $status = $this->statusFor($day->day_number, $completedCount);
 
         if ($status !== self::STATUS_ACTIVE) {
-            throw new DayLockedException;
+            throw new DayLockedException();
         }
 
         $today = Carbon::now($timezone)->toDateString();
@@ -106,7 +106,7 @@ class DiaryService
             ->exists();
 
         if ($alreadyCompletedToday) {
-            throw new AlreadyCompletedTodayException;
+            throw new AlreadyCompletedTodayException();
         }
 
         return DiaryEntry::create([
@@ -121,7 +121,7 @@ class DiaryService
     private function assertGraduate(User $user): void
     {
         if ($user->graduate_status !== GraduateStatus::Confirmed) {
-            throw new AccessDeniedException;
+            throw new AccessDeniedException();
         }
     }
 
