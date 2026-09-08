@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\LegalDocumentController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
 use App\Http\Controllers\Api\V1\VerificationController;
 use Illuminate\Support\Facades\Route;
@@ -8,6 +9,11 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1/verification')->middleware('auth:sanctum')->group(function () {
     Route::post('submit', [VerificationController::class, 'submit']);
     Route::get('status', [VerificationController::class, 'status']);
+});
+
+Route::prefix('v1/legal-documents')->group(function () {
+    Route::get('/', [LegalDocumentController::class, 'index']);
+    Route::get('{legalDocument:slug}', [LegalDocumentController::class, 'show']);
 });
 
 Route::prefix('v1/auth')->group(function () {

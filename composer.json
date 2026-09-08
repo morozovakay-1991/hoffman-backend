@@ -8,12 +8,14 @@
     "require": {
         "php": "^8.2",
         "filament/filament": "^3.3",
+        "filament/spatie-laravel-translatable-plugin": "^3.3",
         "laravel/framework": "^11.31",
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^2.9",
         "predis/predis": "^3.6",
         "sentry/sentry-laravel": "^4.27",
         "spatie/laravel-permission": "^6.25",
+        "spatie/laravel-translatable": "^6.11",
         "spatie/simple-excel": "^3.5"
     },
     "require-dev": {
