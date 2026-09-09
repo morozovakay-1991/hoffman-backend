@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Notifications\Notification;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -133,5 +134,23 @@ class User extends Authenticatable implements FilamentUser
     public function diaryEntries(): HasMany
     {
         return $this->hasMany(DiaryEntry::class);
+    }
+
+    /**
+     * @return HasMany<DeviceToken, $this>
+     */
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
+
+    /**
+     * Registration tokens the FcmChannel should deliver push notifications to.
+     *
+     * @return list<string>
+     */
+    public function routeNotificationForFcm(?Notification $notification = null): array
+    {
+        return $this->deviceTokens()->pluck('token')->all();
     }
 }

@@ -36,13 +36,20 @@ class ProfileService
     }
 
     /**
-     * @param  array{push_enabled?: bool, email_enabled?: bool, marketing_enabled?: bool}  $data
+     * @param  array{push_enabled?: bool, email_enabled?: bool, marketing_enabled?: bool, daily_practices_enabled?: bool, new_articles_enabled?: bool, system_enabled?: bool}  $data
      */
     public function updateNotifications(User $user, array $data): NotificationSetting
     {
         $settings = NotificationSetting::firstOrCreate(
             ['user_id' => $user->id],
-            ['push_enabled' => true, 'email_enabled' => true, 'marketing_enabled' => false],
+            [
+                'push_enabled' => true,
+                'email_enabled' => true,
+                'marketing_enabled' => false,
+                'daily_practices_enabled' => true,
+                'new_articles_enabled' => true,
+                'system_enabled' => true,
+            ],
         );
         $settings->fill($data);
         $settings->save();

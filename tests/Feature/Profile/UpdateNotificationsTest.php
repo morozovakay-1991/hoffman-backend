@@ -22,12 +22,30 @@ class UpdateNotificationsTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('notification_settings.push_enabled', false)
             ->assertJsonPath('notification_settings.email_enabled', true)
-            ->assertJsonPath('notification_settings.marketing_enabled', false);
+            ->assertJsonPath('notification_settings.marketing_enabled', false)
+            ->assertJsonPath('notification_settings.daily_practices_enabled', true)
+            ->assertJsonPath('notification_settings.new_articles_enabled', true)
+            ->assertJsonPath('notification_settings.system_enabled', true);
 
         $this->assertDatabaseHas('notification_settings', [
             'user_id' => $user->id,
             'push_enabled' => false,
         ]);
+    }
+
+    public function test_it_updates_individual_push_categories(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAsApiUser($user)->patchJson('/api/v1/profile/notifications', [
+            'daily_practices_enabled' => false,
+            'new_articles_enabled' => false,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('notification_settings.daily_practices_enabled', false)
+            ->assertJsonPath('notification_settings.new_articles_enabled', false)
+            ->assertJsonPath('notification_settings.system_enabled', true);
     }
 
     public function test_it_partially_updates_existing_notification_settings(): void
