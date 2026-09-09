@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\ArticleController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BillingController;
 use App\Http\Controllers\Api\V1\DiaryController;
+use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\InvoiceController;
 use App\Http\Controllers\Api\V1\LegalDocumentController;
 use App\Http\Controllers\Api\V1\MeditationController;
@@ -88,6 +89,8 @@ Route::prefix('v1/articles')->group(function () {
     Route::get('/', [ArticleController::class, 'index']);
     Route::get('{article}', [ArticleController::class, 'show']);
 });
+
+Route::get('v1/home', [HomeController::class, 'index']);
 
 Route::prefix('v1/auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);

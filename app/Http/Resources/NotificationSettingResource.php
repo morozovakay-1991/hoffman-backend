@@ -20,6 +20,9 @@ class NotificationSettingResource extends JsonResource
             'push_enabled' => $this->push_enabled,
             'email_enabled' => $this->email_enabled,
             'marketing_enabled' => $this->marketing_enabled,
+            'daily_practices_enabled' => $this->daily_practices_enabled,
+            'new_articles_enabled' => $this->new_articles_enabled,
+            'system_enabled' => $this->system_enabled,
         ];
     }
 }
