@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Filament;
 
+use App\Filament\Resources\TopicResource\Pages\EditTopic;
 use App\Filament\Resources\TopicResource\Pages\ListTopics;
 use App\Models\Meditation;
 use App\Models\Tool;
@@ -68,5 +69,34 @@ class TopicResourceTest extends TestCase
         $topic->meditations()->attach($meditation);
 
         $this->actingAs($admin)->get("/backend/topics/{$topic->id}/edit")->assertSuccessful();
+    }
+
+    public function test_an_admin_can_set_the_sort_order(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $topic = Topic::factory()->create(['sort_order' => 0]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditTopic::class, ['record' => $topic->getRouteKey()])
+            ->fillForm(['sort_order' => 5])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(5, $topic->refresh()->sort_order);
+    }
+
+    public function test_an_admin_can_drag_and_drop_reorder_the_topics_list(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $first = Topic::factory()->create(['sort_order' => 0]);
+        $second = Topic::factory()->create(['sort_order' => 10]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(ListTopics::class)
+            ->call('reorderTable', [$second->id, $first->id]);
+
+        $this->assertTrue($second->refresh()->sort_order < $first->refresh()->sort_order);
     }
 }

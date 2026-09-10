@@ -21,6 +21,7 @@ class TopicFactory extends Factory
             'subtitle' => ['ru' => fake()->sentence()],
             'full_description' => ['ru' => fake()->paragraph()],
             'is_published' => true,
+            'sort_order' => 0,
         ];
     }
 

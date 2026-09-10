@@ -49,6 +49,11 @@ class ToolResource extends Resource
                     ->columnSpanFull(),
                 Toggle::make('is_published')
                     ->label('Опубликован'),
+                TextInput::make('sort_order')
+                    ->label('Порядок сортировки')
+                    ->numeric()
+                    ->default(0)
+                    ->required(),
             ]);
     }
 
@@ -68,7 +73,8 @@ class ToolResource extends Resource
                     ->dateTime('d.m.Y H:i')
                     ->sortable(),
             ])
-            ->defaultSort('id', 'desc')
+            ->defaultSort('sort_order')
+            ->reorderable('sort_order')
             ->searchPlaceholder('Поиск по заголовку')
             ->filters([
                 TernaryFilter::make('is_published')

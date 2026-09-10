@@ -30,6 +30,7 @@ class TopicController extends Controller
         $topics = Topic::query()
             ->where('is_published', true)
             ->with(['meditations', 'tools'])
+            ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
 

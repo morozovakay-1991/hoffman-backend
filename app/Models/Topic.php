@@ -24,6 +24,7 @@ class Topic extends Model
         'subtitle',
         'full_description',
         'is_published',
+        'sort_order',
     ];
 
     /**
@@ -44,6 +45,7 @@ class Topic extends Model
     {
         return [
             'is_published' => 'boolean',
+            'sort_order' => 'integer',
         ];
     }
 

@@ -75,6 +75,22 @@ class TopicAccessTest extends TestCase
             ->assertJsonPath('data.is_locked', false);
     }
 
+    public function test_topic_list_is_ordered_by_sort_order_not_creation_order(): void
+    {
+        $third = Topic::factory()->create(['sort_order' => 20]);
+        $first = Topic::factory()->create(['sort_order' => 0]);
+        $second = Topic::factory()->create(['sort_order' => 10]);
+
+        $response = $this->getJson('/api/v1/topics');
+
+        $response->assertOk();
+
+        $this->assertSame(
+            [$first->id, $second->id, $third->id],
+            collect($response->json('data'))->pluck('id')->all(),
+        );
+    }
+
     public function test_unpublished_topic_is_not_found(): void
     {
         $topic = Topic::factory()->unpublished()->create();

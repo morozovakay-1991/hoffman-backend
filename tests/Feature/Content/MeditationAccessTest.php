@@ -88,6 +88,22 @@ class MeditationAccessTest extends TestCase
             ->assertJsonPath('data.is_locked', false);
     }
 
+    public function test_meditation_list_is_ordered_by_sort_order_not_creation_order(): void
+    {
+        $third = Meditation::factory()->create(['sort_order' => 20]);
+        $first = Meditation::factory()->create(['sort_order' => 0]);
+        $second = Meditation::factory()->create(['sort_order' => 10]);
+
+        $response = $this->getJson('/api/v1/meditations');
+
+        $response->assertOk();
+
+        $this->assertSame(
+            [$first->id, $second->id, $third->id],
+            collect($response->json('data'))->pluck('id')->all(),
+        );
+    }
+
     public function test_unpublished_meditation_is_not_found(): void
     {
         $meditation = Meditation::factory()->free()->unpublished()->create();
