@@ -95,6 +95,8 @@ Route::get('v1/home', [HomeController::class, 'index']);
 Route::prefix('v1/auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
+    Route::post('apple', [AuthController::class, 'apple']);
+    Route::post('google', [AuthController::class, 'google']);
 
     Route::prefix('password')->group(function () {
         Route::post('forgot', [PasswordResetController::class, 'forgot']);
