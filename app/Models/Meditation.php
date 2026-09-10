@@ -27,6 +27,7 @@ class Meditation extends Model
         'duration_seconds',
         'is_free',
         'is_published',
+        'sort_order',
     ];
 
     /**
@@ -49,6 +50,7 @@ class Meditation extends Model
             'duration_seconds' => 'integer',
             'is_free' => 'boolean',
             'is_published' => 'boolean',
+            'sort_order' => 'integer',
         ];
     }
 

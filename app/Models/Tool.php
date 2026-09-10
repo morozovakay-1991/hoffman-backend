@@ -24,6 +24,7 @@ class Tool extends Model
         'short_description',
         'full_description',
         'is_published',
+        'sort_order',
     ];
 
     /**
@@ -44,6 +45,7 @@ class Tool extends Model
     {
         return [
             'is_published' => 'boolean',
+            'sort_order' => 'integer',
         ];
     }
 

@@ -24,6 +24,7 @@ class MeditationFactory extends Factory
             'duration_seconds' => fake()->numberBetween(60, 1800),
             'is_free' => false,
             'is_published' => true,
+            'sort_order' => 0,
         ];
     }
 

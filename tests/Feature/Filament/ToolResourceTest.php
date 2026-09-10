@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Filament;
 
+use App\Filament\Resources\ToolResource\Pages\EditTool;
 use App\Filament\Resources\ToolResource\Pages\ListTools;
 use App\Models\Tool;
 use App\Models\User;
@@ -45,5 +46,34 @@ class ToolResourceTest extends TestCase
         $superAdmin = User::factory()->superAdmin()->create();
 
         $this->actingAs($superAdmin)->get('/backend/tools')->assertSuccessful();
+    }
+
+    public function test_an_admin_can_set_the_sort_order(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $tool = Tool::factory()->create(['sort_order' => 0]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditTool::class, ['record' => $tool->getRouteKey()])
+            ->fillForm(['sort_order' => 5])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(5, $tool->refresh()->sort_order);
+    }
+
+    public function test_an_admin_can_drag_and_drop_reorder_the_tools_list(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $first = Tool::factory()->create(['sort_order' => 0]);
+        $second = Tool::factory()->create(['sort_order' => 10]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(ListTools::class)
+            ->call('reorderTable', [$second->id, $first->id]);
+
+        $this->assertTrue($second->refresh()->sort_order < $first->refresh()->sort_order);
     }
 }

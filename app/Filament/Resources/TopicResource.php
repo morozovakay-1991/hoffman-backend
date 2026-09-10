@@ -53,6 +53,11 @@ class TopicResource extends Resource
                     ->columnSpanFull(),
                 Toggle::make('is_published')
                     ->label('Опубликована'),
+                TextInput::make('sort_order')
+                    ->label('Порядок сортировки')
+                    ->numeric()
+                    ->default(0)
+                    ->required(),
                 CheckboxList::make('tools')
                     ->label('Инструменты')
                     ->relationship('tools', modifyQueryUsing: fn (Builder $query): Builder => $query
@@ -92,7 +97,8 @@ class TopicResource extends Resource
                     ->dateTime('d.m.Y H:i')
                     ->sortable(),
             ])
-            ->defaultSort('id', 'desc')
+            ->defaultSort('sort_order')
+            ->reorderable('sort_order')
             ->searchPlaceholder('Поиск по заголовку')
             ->filters([
                 TernaryFilter::make('is_published')

@@ -35,6 +35,7 @@ class MeditationController extends Controller
         $meditations = Meditation::query()
             ->where('is_published', true)
             ->with('topics')
+            ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
 

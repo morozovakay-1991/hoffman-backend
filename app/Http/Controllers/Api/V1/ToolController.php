@@ -30,6 +30,7 @@ class ToolController extends Controller
         $tools = Tool::query()
             ->where('is_published', true)
             ->with('topics')
+            ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
 
