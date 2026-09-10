@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Filament;
 
+use App\Filament\Resources\ArticleResource\Pages\EditArticle;
 use App\Filament\Resources\ArticleResource\Pages\ListArticles;
 use App\Models\Article;
 use App\Models\User;
@@ -45,5 +46,27 @@ class ArticleResourceTest extends TestCase
         $superAdmin = User::factory()->superAdmin()->create();
 
         $this->actingAs($superAdmin)->get('/backend/articles')->assertSuccessful();
+    }
+
+    public function test_an_admin_can_toggle_the_is_new_flag(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $article = Article::factory()->create(['is_new' => false, 'cover_image_path' => null]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditArticle::class, ['record' => $article->getRouteKey()])
+            ->fillForm(['is_new' => true])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertTrue($article->refresh()->is_new);
+
+        Livewire::test(EditArticle::class, ['record' => $article->getRouteKey()])
+            ->fillForm(['is_new' => false])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertFalse($article->refresh()->is_new);
     }
 }

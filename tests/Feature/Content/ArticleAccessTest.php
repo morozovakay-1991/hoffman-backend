@@ -15,12 +15,13 @@ class ArticleAccessTest extends TestCase
 
     public function test_guest_can_view_an_article(): void
     {
-        $article = Article::factory()->create();
+        $article = Article::factory()->isNew()->create();
 
         $response = $this->getJson("/api/v1/articles/{$article->id}");
 
         $response->assertOk()
             ->assertJsonPath('data.is_locked', false)
+            ->assertJsonPath('data.is_new', true)
             ->assertJsonPath('data.full_description', $article->full_description);
     }
 
@@ -71,6 +72,19 @@ class ArticleAccessTest extends TestCase
         $response->assertOk();
         collect($response->json('data'))->each(
             fn (array $article) => $this->assertFalse($article['is_locked']),
+        );
+    }
+
+    public function test_article_list_includes_the_is_new_flag(): void
+    {
+        Article::factory()->isNew()->create();
+        Article::factory()->create();
+
+        $response = $this->getJson('/api/v1/articles');
+
+        $response->assertOk();
+        collect($response->json('data'))->each(
+            fn (array $article) => $this->assertArrayHasKey('is_new', $article),
         );
     }
 
