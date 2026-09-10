@@ -58,6 +58,8 @@ class ArticleResource extends Resource
                     ->label('Дата публикации'),
                 Toggle::make('is_published')
                     ->label('Опубликована'),
+                Toggle::make('is_new')
+                    ->label('Новая'),
             ]);
     }
 
@@ -75,6 +77,9 @@ class ArticleResource extends Resource
                     ->sortable(),
                 IconColumn::make('is_published')
                     ->label('Опубликована')
+                    ->boolean(),
+                IconColumn::make('is_new')
+                    ->label('Новая')
                     ->boolean(),
                 TextColumn::make('updated_at')
                     ->label('Обновлена')

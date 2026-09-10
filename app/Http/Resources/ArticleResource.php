@@ -23,6 +23,7 @@ class ArticleResource extends JsonResource
             'full_description' => $this->full_description,
             'cover_image_path' => $this->cover_image_path,
             'published_at' => $this->published_at,
+            'is_new' => $this->is_new,
             // Articles are always accessible regardless of subscription state (see AccessLevelService),
             // so is_locked is always false. Kept for a consistent response shape across content resources.
             'is_locked' => false,

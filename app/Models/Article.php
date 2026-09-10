@@ -25,6 +25,7 @@ class Article extends Model
         'cover_image_path',
         'published_at',
         'is_published',
+        'is_new',
     ];
 
     /**
@@ -46,6 +47,7 @@ class Article extends Model
         return [
             'published_at' => 'datetime',
             'is_published' => 'boolean',
+            'is_new' => 'boolean',
         ];
     }
 }

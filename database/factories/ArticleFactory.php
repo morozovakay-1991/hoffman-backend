@@ -23,6 +23,7 @@ class ArticleFactory extends Factory
             'cover_image_path' => 'articles/'.fake()->uuid().'.jpg',
             'published_at' => now(),
             'is_published' => true,
+            'is_new' => false,
         ];
     }
 
@@ -33,6 +34,16 @@ class ArticleFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'is_published' => false,
+        ]);
+    }
+
+    /**
+     * Indicate that the article is marked as new.
+     */
+    public function isNew(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_new' => true,
         ]);
     }
 }
