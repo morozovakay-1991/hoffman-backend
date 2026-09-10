@@ -49,11 +49,11 @@ class AuthService
         $user = User::where('email', $credentials['email'])->first();
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
-            throw new InvalidCredentialsException;
+            throw new InvalidCredentialsException();
         }
 
         if ($user->isBlocked()) {
-            throw new AccountBlockedException;
+            throw new AccountBlockedException();
         }
 
         return [
@@ -129,7 +129,7 @@ class AuthService
             $email = $providerUser->getEmail();
 
             if ($email && User::where('email', $email)->exists()) {
-                throw new SocialEmailConflictException;
+                throw new SocialEmailConflictException();
             }
 
             $user = User::create([
@@ -142,7 +142,7 @@ class AuthService
         }
 
         if ($user->isBlocked()) {
-            throw new AccountBlockedException;
+            throw new AccountBlockedException();
         }
 
         return [
