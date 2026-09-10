@@ -140,6 +140,17 @@
       0 => 'Laravel\\Sentinel\\SentinelServiceProvider',
     ),
   ),
+  'laravel/socialite' => 
+  array (
+    'aliases' => 
+    array (
+      'Socialite' => 'Laravel\\Socialite\\Facades\\Socialite',
+    ),
+    'providers' => 
+    array (
+      0 => 'Laravel\\Socialite\\SocialiteServiceProvider',
+    ),
+  ),
   'laravel/tinker' => 
   array (
     'providers' => 
@@ -200,6 +211,13 @@
     array (
       0 => 'Sentry\\Laravel\\ServiceProvider',
       1 => 'Sentry\\Laravel\\Tracing\\ServiceProvider',
+    ),
+  ),
+  'socialiteproviders/manager' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'SocialiteProviders\\Manager\\ServiceProvider',
     ),
   ),
   'spatie/laravel-permission' => 

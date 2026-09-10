@@ -56,4 +56,23 @@ return [
         'base_url' => env('CLOUDPAYMENTS_BASE_URL', 'https://api.cloudpayments.ru'),
     ],
 
+    // Used only to verify provider tokens issued to the mobile apps (Socialite's
+    // userFromToken), never for a server-side OAuth redirect flow — so
+    // client_secret/redirect are irrelevant and left blank.
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET', ''),
+        'redirect' => env('GOOGLE_REDIRECT_URI', ''),
+    ],
+
+    // client_id must match the "aud" claim of the identity token issued to the
+    // mobile apps (the app's bundle id for native Sign in with Apple). No
+    // private_key is configured since we only verify tokens, never exchange an
+    // authorization code for one.
+    'apple' => [
+        'client_id' => env('APPLE_CLIENT_ID'),
+        'client_secret' => env('APPLE_CLIENT_SECRET', ''),
+        'redirect' => env('APPLE_REDIRECT_URI', ''),
+    ],
+
 ];
