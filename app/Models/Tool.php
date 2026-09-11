@@ -25,6 +25,7 @@ class Tool extends Model
         'full_description',
         'is_published',
         'sort_order',
+        'stage_tag',
     ];
 
     /**

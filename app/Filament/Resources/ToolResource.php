@@ -14,8 +14,10 @@ use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ToolResource extends Resource
 {
@@ -54,6 +56,9 @@ class ToolResource extends Resource
                     ->numeric()
                     ->default(0)
                     ->required(),
+                TextInput::make('stage_tag')
+                    ->label('Ступень процесса Хоффмана')
+                    ->maxLength(255),
             ]);
     }
 
@@ -68,6 +73,11 @@ class ToolResource extends Resource
                 IconColumn::make('is_published')
                     ->label('Опубликован')
                     ->boolean(),
+                TextColumn::make('stage_tag')
+                    ->label('Ступень')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('—'),
                 TextColumn::make('updated_at')
                     ->label('Обновлён')
                     ->dateTime('d.m.Y H:i')
@@ -82,6 +92,16 @@ class ToolResource extends Resource
                     ->placeholder('Все')
                     ->trueLabel('Опубликованные')
                     ->falseLabel('Черновики'),
+                Filter::make('stage_tag')
+                    ->label('Ступень')
+                    ->form([
+                        TextInput::make('stage_tag')
+                            ->label('Ступень процесса Хоффмана'),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => $query->when(
+                        filled($data['stage_tag'] ?? null),
+                        fn (Builder $query) => $query->where('stage_tag', 'like', '%' . $data['stage_tag'] . '%'),
+                    )),
             ])
             ->actions([
                 EditAction::make(),
