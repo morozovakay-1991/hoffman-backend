@@ -76,4 +76,34 @@ class ToolResourceTest extends TestCase
 
         $this->assertTrue($second->refresh()->sort_order < $first->refresh()->sort_order);
     }
+
+    public function test_an_admin_can_set_the_stage_tag(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $tool = Tool::factory()->create(['stage_tag' => null]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditTool::class, ['record' => $tool->getRouteKey()])
+            ->fillForm(['stage_tag' => 'stage-3'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame('stage-3', $tool->refresh()->stage_tag);
+    }
+
+    public function test_an_admin_can_filter_tools_by_stage_tag(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $breathing = Tool::factory()->create(['stage_tag' => 'stage-1']);
+        $journaling = Tool::factory()->create(['stage_tag' => 'stage-2']);
+
+        $this->actingAs($admin);
+
+        Livewire::test(ListTools::class)
+            ->assertCanSeeTableRecords([$breathing, $journaling])
+            ->filterTable('stage_tag', ['stage_tag' => 'stage-1'])
+            ->assertCanSeeTableRecords([$breathing])
+            ->assertCanNotSeeTableRecords([$journaling]);
+    }
 }

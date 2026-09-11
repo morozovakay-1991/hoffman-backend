@@ -26,6 +26,7 @@ class ToolResource extends JsonResource
             'short_description' => $this->short_description,
             'full_description' => $isLocked ? null : $this->full_description,
             'is_locked' => $isLocked,
+            'stage_tag' => $this->stage_tag,
             'topic_ids' => $this->whenLoaded('topics', fn () => $this->topics->pluck('id')),
         ];
     }

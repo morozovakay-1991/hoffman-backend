@@ -15,7 +15,7 @@ class ToolAccessTest extends TestCase
 
     public function test_guest_sees_tools_locked_in_the_list(): void
     {
-        $tool = Tool::factory()->create();
+        $tool = Tool::factory()->create(['stage_tag' => 'stage-1']);
 
         $response = $this->getJson('/api/v1/tools');
 
@@ -24,6 +24,7 @@ class ToolAccessTest extends TestCase
         $items = collect($response->json('data'))->keyBy('id');
         $this->assertTrue($items[$tool->id]['is_locked']);
         $this->assertNull($items[$tool->id]['full_description']);
+        $this->assertSame('stage-1', $items[$tool->id]['stage_tag']);
     }
 
     public function test_guest_is_denied_a_tool(): void
@@ -59,7 +60,8 @@ class ToolAccessTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('data.is_locked', false)
-            ->assertJsonPath('data.full_description', $tool->full_description);
+            ->assertJsonPath('data.full_description', $tool->full_description)
+            ->assertJsonPath('data.stage_tag', $tool->stage_tag);
     }
 
     public function test_confirmed_graduate_with_subscription_can_view_a_tool(): void
