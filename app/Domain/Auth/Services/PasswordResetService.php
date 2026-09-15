@@ -16,11 +16,16 @@ class PasswordResetService
     /**
      * Generate a fresh reset code for the given email and invalidate any previous one.
      *
-     * @throws EmailNotFoundException
+     * Silently does nothing when no account matches the email, so the response
+     * given to the caller cannot be used to enumerate registered accounts.
      */
     public function forgot(string $email): void
     {
-        $this->findUserOrFail($email);
+        $user = User::where('email', $email)->first();
+
+        if (! $user) {
+            return;
+        }
 
         PasswordResetCode::where('email', $email)->delete();
 
