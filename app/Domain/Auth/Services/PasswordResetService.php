@@ -8,6 +8,7 @@ use App\Domain\Auth\Exceptions\InvalidCodeException;
 use App\Domain\Auth\Exceptions\TooManyAttemptsException;
 use App\Models\PasswordResetCode;
 use App\Models\User;
+use App\Notifications\PasswordResetCodeNotification;
 
 class PasswordResetService
 {
@@ -29,14 +30,18 @@ class PasswordResetService
 
         PasswordResetCode::where('email', $email)->delete();
 
+        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
         PasswordResetCode::create([
             'email' => $email,
-            'code' => str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT),
+            'code' => $code,
             'attempts' => 0,
             'expires_at' => now()->addMinutes(self::CODE_TTL_MINUTES),
             'verified_at' => null,
             'used_at' => null,
         ]);
+
+        $user->notify(new PasswordResetCodeNotification($code, self::CODE_TTL_MINUTES));
     }
 
     /**

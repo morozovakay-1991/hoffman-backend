@@ -4,7 +4,9 @@ namespace Tests\Feature\Auth;
 
 use App\Models\PasswordResetCode;
 use App\Models\User;
+use App\Notifications\PasswordResetCodeNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class ForgotPasswordTest extends TestCase
@@ -15,7 +17,9 @@ class ForgotPasswordTest extends TestCase
 
     public function test_it_generates_a_reset_code_for_a_known_email(): void
     {
-        User::factory()->create(['email' => 'jane@example.com']);
+        Notification::fake();
+
+        $user = User::factory()->create(['email' => 'jane@example.com']);
 
         $response = $this->postJson('/api/v1/auth/password/forgot', [
             'email' => 'jane@example.com',
@@ -32,10 +36,34 @@ class ForgotPasswordTest extends TestCase
         $this->assertNull($resetCode->verified_at);
         $this->assertNull($resetCode->used_at);
         $this->assertTrue($resetCode->expires_at->between(now()->addMinutes(4), now()->addMinutes(5)));
+
+        Notification::assertSentTo(
+            $user,
+            PasswordResetCodeNotification::class,
+            fn (PasswordResetCodeNotification $notification): bool => $notification->code === $resetCode->code
+                && $notification->ttlMinutes === 5
+        );
+    }
+
+    public function test_it_sends_the_reset_code_by_mail(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create(['email' => 'jane@example.com']);
+
+        $this->postJson('/api/v1/auth/password/forgot', ['email' => 'jane@example.com'])->assertOk();
+
+        Notification::assertSentTo($user, PasswordResetCodeNotification::class, function (PasswordResetCodeNotification $notification) use ($user) {
+            $mail = $notification->toMail($user);
+
+            return str_contains($mail->render(), $notification->code);
+        });
     }
 
     public function test_it_returns_the_same_success_response_for_an_unknown_email(): void
     {
+        Notification::fake();
+
         $response = $this->postJson('/api/v1/auth/password/forgot', [
             'email' => 'unknown@example.com',
         ]);
@@ -43,10 +71,14 @@ class ForgotPasswordTest extends TestCase
         $response->assertOk()->assertExactJson(['message' => self::SUCCESS_MESSAGE]);
 
         $this->assertDatabaseCount('password_reset_codes', 0);
+
+        Notification::assertNothingSent();
     }
 
     public function test_it_returns_an_identical_response_regardless_of_whether_the_email_exists(): void
     {
+        Notification::fake();
+
         User::factory()->create(['email' => 'jane@example.com']);
 
         $knownResponse = $this->postJson('/api/v1/auth/password/forgot', ['email' => 'jane@example.com']);
@@ -58,6 +90,8 @@ class ForgotPasswordTest extends TestCase
 
     public function test_it_only_creates_a_reset_code_for_a_known_email(): void
     {
+        Notification::fake();
+
         User::factory()->create(['email' => 'jane@example.com']);
 
         $this->postJson('/api/v1/auth/password/forgot', ['email' => 'jane@example.com'])->assertOk();
@@ -79,6 +113,8 @@ class ForgotPasswordTest extends TestCase
 
     public function test_it_invalidates_the_previous_code_when_requested_again(): void
     {
+        Notification::fake();
+
         User::factory()->create(['email' => 'jane@example.com']);
 
         $this->postJson('/api/v1/auth/password/forgot', ['email' => 'jane@example.com'])->assertOk();
