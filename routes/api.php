@@ -17,12 +17,12 @@ use App\Http\Controllers\Api\V1\VerificationController;
 use App\Http\Controllers\Api\V1\WebhookController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1/verification')->middleware('auth:sanctum')->group(function () {
+Route::prefix('v1/verification')->middleware(['auth:sanctum', 'not-blocked'])->group(function () {
     Route::post('submit', [VerificationController::class, 'submit']);
     Route::get('status', [VerificationController::class, 'status']);
 });
 
-Route::prefix('v1/profile')->middleware('auth:sanctum')->group(function () {
+Route::prefix('v1/profile')->middleware(['auth:sanctum', 'not-blocked'])->group(function () {
     Route::get('/', [ProfileController::class, 'show']);
     Route::patch('/', [ProfileController::class, 'update']);
     Route::patch('email', [ProfileController::class, 'updateEmail']);
@@ -33,12 +33,12 @@ Route::prefix('v1/profile')->middleware('auth:sanctum')->group(function () {
     Route::delete('/', [ProfileController::class, 'destroy']);
 });
 
-Route::get('v1/subscription', [SubscriptionController::class, 'show'])->middleware('auth:sanctum');
+Route::get('v1/subscription', [SubscriptionController::class, 'show'])->middleware(['auth:sanctum', 'not-blocked']);
 
 Route::prefix('v1/billing')->group(function () {
     Route::get('plans', [BillingController::class, 'plans']);
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'not-blocked'])->group(function () {
         Route::get('invoices', [InvoiceController::class, 'index']);
         Route::get('invoices/{invoice}', [InvoiceController::class, 'show']);
         Route::post('checkout-session', [BillingController::class, 'checkoutSession']);
@@ -55,7 +55,7 @@ Route::prefix('webhooks')->middleware('throttle:webhooks')->group(function () {
     Route::post('cloudpayments', [WebhookController::class, 'cloudpayments']);
 });
 
-Route::prefix('v1/diary')->middleware('auth:sanctum')->group(function () {
+Route::prefix('v1/diary')->middleware(['auth:sanctum', 'not-blocked'])->group(function () {
     Route::get('days', [DiaryController::class, 'index']);
     Route::get('days/{dayNumber}', [DiaryController::class, 'show'])->whereNumber('dayNumber');
     Route::post('days/{dayNumber}/answer', [DiaryController::class, 'saveAnswer'])->whereNumber('dayNumber');
@@ -104,7 +104,7 @@ Route::prefix('v1/auth')->group(function () {
         Route::post('reset', [PasswordResetController::class, 'reset']);
     });
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'not-blocked'])->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
     });

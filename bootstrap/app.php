@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureUserIsNotBlocked;
 use App\Http\Middleware\SentryContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -15,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->append(SentryContext::class);
+        $middleware->alias(['not-blocked' => EnsureUserIsNotBlocked::class]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         Integration::handles($exceptions);

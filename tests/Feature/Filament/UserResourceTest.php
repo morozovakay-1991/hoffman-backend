@@ -73,4 +73,21 @@ class UserResourceTest extends TestCase
 
         $this->assertNull($target->fresh()->blocked_at);
     }
+
+    public function test_blocking_a_user_revokes_their_existing_tokens(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $target = User::factory()->create();
+        $target->createToken('api_token');
+
+        $this->assertDatabaseCount('personal_access_tokens', 1);
+
+        $this->actingAs($admin);
+
+        Livewire::test(ListUsers::class)
+            ->callTableAction('block', $target)
+            ->assertNotified();
+
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
 }

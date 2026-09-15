@@ -108,6 +108,7 @@ class UserResource extends Resource
             ->modalSubmitActionLabel('Заблокировать')
             ->action(function (User $record): void {
                 $record->forceFill(['blocked_at' => now()])->save();
+                $record->tokens()->delete();
 
                 Notification::make()
                     ->title('Пользователь заблокирован')
