@@ -31,6 +31,31 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->ip());
         });
 
+        // Brute-force protection: 5 attempts per minute per IP+email combination.
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(5)->by($this->authAttemptKey($request));
+        });
+
+        RateLimiter::for('register', function (Request $request) {
+            return Limit::perMinute(5)->by($this->authAttemptKey($request));
+        });
+
+        // Protects the graduate directory from being enumerated via repeated submissions.
+        RateLimiter::for('verification', function (Request $request) {
+            return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('profile', function (Request $request) {
+            return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
+        });
+
         Event::listen(SocialiteWasCalled::class, AppleExtendSocialite::class);
+    }
+
+    private function authAttemptKey(Request $request): string
+    {
+        $identifier = strtolower((string) $request->input('email'));
+
+        return $request->ip().'|'.$identifier;
     }
 }

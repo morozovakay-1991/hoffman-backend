@@ -18,11 +18,11 @@ use App\Http\Controllers\Api\V1\WebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1/verification')->middleware(['auth:sanctum', 'not-blocked'])->group(function () {
-    Route::post('submit', [VerificationController::class, 'submit']);
+    Route::post('submit', [VerificationController::class, 'submit'])->middleware('throttle:verification');
     Route::get('status', [VerificationController::class, 'status']);
 });
 
-Route::prefix('v1/profile')->middleware(['auth:sanctum', 'not-blocked'])->group(function () {
+Route::prefix('v1/profile')->middleware(['auth:sanctum', 'not-blocked', 'throttle:profile'])->group(function () {
     Route::get('/', [ProfileController::class, 'show']);
     Route::patch('/', [ProfileController::class, 'update']);
     Route::patch('email', [ProfileController::class, 'updateEmail']);
@@ -93,8 +93,8 @@ Route::prefix('v1/articles')->group(function () {
 Route::get('v1/home', [HomeController::class, 'index']);
 
 Route::prefix('v1/auth')->group(function () {
-    Route::post('register', [AuthController::class, 'register']);
-    Route::post('login', [AuthController::class, 'login']);
+    Route::post('register', [AuthController::class, 'register'])->middleware('throttle:register');
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
     Route::post('apple', [AuthController::class, 'apple']);
     Route::post('google', [AuthController::class, 'google']);
 
