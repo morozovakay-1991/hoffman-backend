@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Invoice;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
+#[Group(name: 'Billing', description: 'Subscription plans, checkout, cancellation, payment method updates and invoices. `cancel` and `payment-method` act on the user\'s current (non-cancelled/expired) subscription and return `404 SUBSCRIPTION_NOT_FOUND` if there is none.')]
 class InvoiceController extends Controller
 {
     private const DEFAULT_PER_PAGE = 15;

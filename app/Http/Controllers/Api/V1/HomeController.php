@@ -8,9 +8,11 @@ use App\Http\Resources\ArticleResource;
 use App\Http\Resources\MeditationResource;
 use App\Http\Resources\ToolResource;
 use App\Http\Resources\TopicResource;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+#[Group(name: 'Home', description: 'Aggregated home-screen feed: a handful of accessible items per content type plus diary progress. Public — access to each item is subscription-gated per request, not by authentication.')]
 class HomeController extends Controller
 {
     public function __construct(private readonly HomeService $homeService)

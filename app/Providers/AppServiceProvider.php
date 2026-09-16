@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Domain\Verification\Contracts\GraduateDirectoryProviderInterface;
 use App\Domain\Verification\Providers\CsvGraduateDirectoryProvider;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use SocialiteProviders\Apple\AppleExtendSocialite;
@@ -50,6 +52,12 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Event::listen(SocialiteWasCalled::class, AppleExtendSocialite::class);
+
+        // Scramble's docs middleware already allows `local` unconditionally; this gate
+        // extends that to `staging` while keeping `/docs/api` closed in production.
+        // The nullable $user is required so Laravel evaluates this for guests too —
+        // Gate::allows() refuses to call a callback with no parameters for a guest.
+        Gate::define('viewApiDocs', fn (?User $user = null) => app()->environment('staging'));
     }
 
     private function authAttemptKey(Request $request): string

@@ -7,9 +7,11 @@ use App\Domain\Content\Services\AccessLevelService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ArticleResource;
 use App\Models\Article;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+#[Group(name: 'Articles', description: 'Article catalogue. Public — articles are always accessible regardless of subscription, so both guests and logged-in users may call these.')]
 class ArticleController extends Controller
 {
     public function __construct(private readonly AccessLevelService $accessLevelService)
@@ -33,6 +35,13 @@ class ArticleController extends Controller
         return ArticleResource::collection($articles);
     }
 
+    /**
+     * Show a single article.
+     *
+     * Routed through AccessLevelService for consistency with other content
+     * types, but articles are always accessible, so `403 ACCESS_DENIED` is
+     * not expected in practice for this endpoint.
+     */
     public function show(Request $request, Article $article): ArticleResource
     {
         if (!$article->is_published) {
