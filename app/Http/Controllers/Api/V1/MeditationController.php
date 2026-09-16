@@ -7,11 +7,13 @@ use App\Domain\Content\Services\AccessLevelService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MeditationResource;
 use App\Models\Meditation;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Storage;
 
+#[Group(name: 'Meditations', description: 'Guided meditation catalogue. Public — access to each item is subscription-gated per request, not by authentication, so both guests and logged-in users may call these.')]
 class MeditationController extends Controller
 {
     public function __construct(private readonly AccessLevelService $accessLevelService)

@@ -7,9 +7,11 @@ use App\Domain\Content\Services\AccessLevelService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ToolResource;
 use App\Models\Tool;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+#[Group(name: 'Tools', description: 'Practice tools catalogue. Public — access to each item is subscription-gated per request, not by authentication, so both guests and logged-in users may call these.')]
 class ToolController extends Controller
 {
     public function __construct(private readonly AccessLevelService $accessLevelService)
@@ -44,6 +46,13 @@ class ToolController extends Controller
         return ToolResource::collection($tools);
     }
 
+    /**
+     * Show a single tool.
+     *
+     * Unlike the list endpoint, a direct request for one item is explicitly
+     * denied (`403 ACCESS_DENIED`) rather than flagged, since the caller
+     * already knows which item they asked for.
+     */
     public function show(Request $request, Tool $tool): ToolResource
     {
         if (!$tool->is_published) {
