@@ -54,21 +54,21 @@ class EmailChangeService
             ->first();
 
         if (! $changeRequest) {
-            throw new InvalidEmailChangeCodeException;
+            throw new InvalidEmailChangeCodeException();
         }
 
         if ($changeRequest->hasTooManyAttempts()) {
-            throw new TooManyEmailChangeAttemptsException;
+            throw new TooManyEmailChangeAttemptsException();
         }
 
         if ($changeRequest->isExpired()) {
-            throw new EmailChangeCodeExpiredException;
+            throw new EmailChangeCodeExpiredException();
         }
 
         if ($changeRequest->code !== $code) {
             $changeRequest->increment('attempts');
 
-            throw new InvalidEmailChangeCodeException;
+            throw new InvalidEmailChangeCodeException();
         }
 
         $user->update(['email' => $changeRequest->new_email]);

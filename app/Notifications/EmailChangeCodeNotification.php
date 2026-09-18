@@ -15,7 +15,8 @@ class EmailChangeCodeNotification extends Notification implements ShouldQueue
     public function __construct(
         public readonly string $code,
         public readonly int $ttlMinutes,
-    ) {}
+    ) {
+    }
 
     /**
      * @return list<string>
@@ -27,7 +28,7 @@ class EmailChangeCodeNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
+        return (new MailMessage())
             ->subject('Код подтверждения смены email')
             ->greeting('Здравствуйте!')
             ->line('Вы запросили смену email на этот адрес. Используйте код ниже, чтобы подтвердить его.')
