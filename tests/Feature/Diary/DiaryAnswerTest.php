@@ -206,12 +206,14 @@ class DiaryAnswerTest extends TestCase
     }
 
     /**
-     * The client sends the device's timezone on every request because the user may
-     * be travelling. This freezes a single instant and shows that a user who has
-     * crossed into a new local calendar day (as reported by a new device timezone)
-     * may complete another day, even though the underlying UTC instant is unchanged.
+     * A malicious client could otherwise send timezone A, save an answer, then
+     * immediately resend with timezone B chosen so that its local date is already
+     * "tomorrow" - unlocking a second entry within the same real calendar day
+     * without any time actually passing. The reported UTC-offset jump (Niue to
+     * Kiritimati is 25 hours) vastly outruns the zero elapsed real time here, so
+     * it must be rejected as an implausible timezone change.
      */
-    public function test_a_traveling_user_crossing_into_a_new_local_day_can_complete_another_day(): void
+    public function test_switching_timezone_between_requests_cannot_fake_a_new_day(): void
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
@@ -222,9 +224,35 @@ class DiaryAnswerTest extends TestCase
         // Pacific/Niue is UTC-11: local date is still 2026-06-15.
         $this->postAnswer($user, 1, 'Pacific/Niue')->assertCreated();
 
-        // Pacific/Kiritimati is UTC+14: local date is already 2026-06-16, a new day
-        // for this device even though no time has passed on the server clock.
+        // Pacific/Kiritimati is UTC+14: local date is already 2026-06-16, but no
+        // real time has passed, so this is not a genuine timezone change.
         $response = $this->postAnswer($user, 2, 'Pacific/Kiritimati');
+
+        $response->assertStatus(422)
+            ->assertJsonPath('error.code', 'ALREADY_COMPLETED_TODAY');
+        $this->assertDatabaseCount('diary_entries', 1);
+    }
+
+    /**
+     * The client sends the device's timezone on every request because the user may
+     * be travelling. This is what the anti-manipulation check must not break: a
+     * real ~9 hour flight from Moscow to Kamchatka (both fixed, DST-free offsets)
+     * plausibly explains the +9 hour offset change, and the user has genuinely
+     * landed on their next local calendar day.
+     */
+    public function test_a_traveling_user_crossing_into_a_new_local_day_can_complete_another_day(): void
+    {
+        $this->seedDays();
+        $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+
+        // Europe/Moscow is UTC+3: local date is 2026-06-15.
+        Carbon::setTestNow(Carbon::parse('2026-06-15 15:00:00', 'UTC'));
+        $this->postAnswer($user, 1, 'Europe/Moscow')->assertCreated();
+
+        // 9 real hours later - a plausible direct flight - Asia/Kamchatka (UTC+12)
+        // is already 2026-06-16 locally.
+        Carbon::setTestNow(Carbon::parse('2026-06-16 00:00:00', 'UTC'));
+        $response = $this->postAnswer($user, 2, 'Asia/Kamchatka');
 
         $response->assertCreated();
         $this->assertDatabaseCount('diary_entries', 2);
@@ -247,5 +275,27 @@ class DiaryAnswerTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonPath('error.code', 'ALREADY_COMPLETED_TODAY');
+    }
+
+    /**
+     * Letting some real time pass doesn't legitimise an implausible jump on its
+     * own: 5 hours is nowhere near enough to explain a 25 hour offset change
+     * (Niue to Kiritimati), so this must still be rejected, not just the
+     * zero-elapsed-time case.
+     */
+    public function test_a_large_timezone_jump_is_still_blocked_with_a_little_elapsed_time(): void
+    {
+        $this->seedDays();
+        $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+
+        Carbon::setTestNow(Carbon::parse('2026-06-15 23:30:00', 'UTC'));
+        $this->postAnswer($user, 1, 'Pacific/Niue')->assertCreated();
+
+        Carbon::setTestNow(Carbon::parse('2026-06-16 04:30:00', 'UTC'));
+        $response = $this->postAnswer($user, 2, 'Pacific/Kiritimati');
+
+        $response->assertStatus(422)
+            ->assertJsonPath('error.code', 'ALREADY_COMPLETED_TODAY');
+        $this->assertDatabaseCount('diary_entries', 1);
     }
 }

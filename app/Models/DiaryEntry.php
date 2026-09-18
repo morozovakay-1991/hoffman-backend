@@ -18,6 +18,7 @@ class DiaryEntry extends Model
         'answer_text',
         'completed_date',
         'completed_at',
+        'timezone',
     ];
 
     /**
