@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\PaymentWebhookEvent;
 use App\Models\Subscription;
 use Carbon\Carbon;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Stripe\Event;
@@ -245,6 +246,15 @@ class WebhookService
         };
     }
 
+    /**
+     * alreadyProcessed() dedupes by the webhook's own event id, but two
+     * distinct event ids (e.g. a Stripe retry or a resend via the dashboard)
+     * can still reference the same underlying invoice. The exists() check
+     * below catches that in the common case; the partial unique index on
+     * invoices(provider, external_invoice_id) backs it up at the database
+     * level, so a race between two such deliveries can't create a duplicate
+     * invoice row either.
+     */
     private function recordInvoice(
         Subscription $subscription,
         string $provider,
@@ -252,16 +262,34 @@ class WebhookService
         ?int $amount,
         ?string $currency,
     ): void {
-        Invoice::create([
-            'user_id' => $subscription->user_id,
-            'subscription_id' => $subscription->id,
-            'provider' => $provider,
-            'external_invoice_id' => $externalInvoiceId,
-            'amount' => $amount,
-            'currency' => $currency,
-            'status' => 'paid',
-            'paid_at' => now(),
-        ]);
+        if ($externalInvoiceId !== null) {
+            $exists = Invoice::query()
+                ->where('provider', $provider)
+                ->where('external_invoice_id', $externalInvoiceId)
+                ->exists();
+
+            if ($exists) {
+                return;
+            }
+        }
+
+        try {
+            Invoice::create([
+                'user_id' => $subscription->user_id,
+                'subscription_id' => $subscription->id,
+                'provider' => $provider,
+                'external_invoice_id' => $externalInvoiceId,
+                'amount' => $amount,
+                'currency' => $currency,
+                'status' => 'paid',
+                'paid_at' => now(),
+            ]);
+        } catch (UniqueConstraintViolationException $e) {
+            Log::info('WebhookService: duplicate invoice insert avoided by the database unique constraint.', [
+                'provider' => $provider,
+                'external_invoice_id' => $externalInvoiceId,
+            ]);
+        }
     }
 
     private function alreadyProcessed(string $provider, string $externalEventId): bool
