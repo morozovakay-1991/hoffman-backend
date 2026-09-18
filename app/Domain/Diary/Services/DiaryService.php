@@ -29,6 +29,18 @@ class DiaryService
     public const STATUS_COMPLETED = 'completed';
 
     /**
+     * How much faster than real elapsed time a user's reported UTC offset is
+     * allowed to change between two requests. A genuine traveller's local
+     * offset can only shift as fast as they physically move between
+     * timezones, so a jump from e.g. UTC-11 to UTC+14 is plausible after a
+     * long-haul flight but not between two requests that are seconds apart.
+     * The grace hours absorb layovers, boarding time and the fact that
+     * timezone boundaries don't align with travel time to the minute,
+     * without opening the door back up to an instant, no-travel swap.
+     */
+    private const TIMEZONE_JUMP_GRACE_HOURS = 3;
+
+    /**
      * Return all 100 diary days for the user, each flagged with its status.
      *
      * @return Collection<int, DiaryDay>
@@ -85,6 +97,15 @@ class DiaryService
      * the request (the user's device timezone, since they may be
      * travelling); a second attempt on the same local day is rejected with
      * AlreadyCompletedTodayException regardless of which day it targets.
+     *
+     * The `timezone` string is trusted client input (validated only for
+     * being a real IANA identifier), so a client could otherwise send a
+     * different timezone on each request purely to make it look like the
+     * local calendar date has advanced, without any real time having
+     * passed, and complete two days "the same day" for real-world purposes.
+     * assertPlausibleTimezoneChange() closes that gap by rejecting a
+     * reported UTC-offset change that outruns the real elapsed time since
+     * the user's last entry.
      */
     public function saveAnswer(User $user, int $dayNumber, string $answer, string $timezone): DiaryEntry
     {
@@ -98,6 +119,10 @@ class DiaryService
         if ($status !== self::STATUS_ACTIVE) {
             throw new DayLockedException();
         }
+
+        $lastEntry = $user->diaryEntries()->latest('completed_at')->first();
+
+        $this->assertPlausibleTimezoneChange($lastEntry, $timezone);
 
         $today = Carbon::now($timezone)->toDateString();
 
@@ -115,7 +140,34 @@ class DiaryService
             'answer_text' => $answer,
             'completed_date' => $today,
             'completed_at' => Carbon::now($timezone),
+            'timezone' => $timezone,
         ]);
+    }
+
+    /**
+     * Reject a timezone whose reported UTC offset has shifted more than the
+     * real elapsed time since the user's last entry could plausibly
+     * explain (plus TIMEZONE_JUMP_GRACE_HOURS of slack). This is what stops
+     * "send timezone A, then immediately send timezone B where it's
+     * already tomorrow" from unlocking a second entry for the same real
+     * day, while still letting a traveller who genuinely changed timezone
+     * over the course of a real trip through.
+     */
+    private function assertPlausibleTimezoneChange(?DiaryEntry $lastEntry, string $timezone): void
+    {
+        if ($lastEntry === null || $lastEntry->timezone === null) {
+            return;
+        }
+
+        $elapsedHours = $lastEntry->completed_at->diffInMinutes(Carbon::now()) / 60;
+
+        $offsetDeltaHours = abs(
+            Carbon::now($timezone)->utcOffset() - Carbon::now($lastEntry->timezone)->utcOffset()
+        ) / 60;
+
+        if ($offsetDeltaHours > $elapsedHours + self::TIMEZONE_JUMP_GRACE_HOURS) {
+            throw new AlreadyCompletedTodayException();
+        }
     }
 
     private function assertGraduate(User $user): void
