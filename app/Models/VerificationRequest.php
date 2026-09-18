@@ -25,6 +25,8 @@ class VerificationRequest extends Model
         'last_name',
         'first_name',
         'phone',
+        'graduate_directory_id',
+        'duplicate_of_verification_request_id',
         'institution_name',
         'graduation_year',
         'document_path',
@@ -60,5 +62,24 @@ class VerificationRequest extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewer_id');
+    }
+
+    /**
+     * @return BelongsTo<GraduateDirectory, $this>
+     */
+    public function graduateDirectoryEntry(): BelongsTo
+    {
+        return $this->belongsTo(GraduateDirectory::class, 'graduate_directory_id');
+    }
+
+    /**
+     * The other user's already-confirmed verification request for the same
+     * graduate directory entry, when this request was flagged as a duplicate.
+     *
+     * @return BelongsTo<VerificationRequest, $this>
+     */
+    public function duplicateOf(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'duplicate_of_verification_request_id');
     }
 }

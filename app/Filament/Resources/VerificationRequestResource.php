@@ -11,7 +11,9 @@ use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
@@ -72,6 +74,14 @@ class VerificationRequestResource extends Resource
                     ->formatStateUsing(fn (VerificationStatus $state): string => self::STATUS_LABELS[$state->value])
                     ->color(fn (VerificationStatus $state): string => self::STATUS_COLORS[$state->value])
                     ->sortable(),
+                IconColumn::make('duplicate_of_verification_request_id')
+                    ->label('Дубликат')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-exclamation-triangle')
+                    ->trueColor('warning')
+                    ->tooltip(fn (VerificationRequest $record): ?string => $record->duplicate_of_verification_request_id
+                        ? "Совпадает со справочником, уже подтверждённым для заявки #{$record->duplicate_of_verification_request_id}"
+                        : null),
                 TextColumn::make('reviewer.name')
                     ->label('Проверил')
                     ->placeholder('—'),
@@ -91,6 +101,9 @@ class VerificationRequestResource extends Resource
                 SelectFilter::make('status')
                     ->label('Статус')
                     ->options(self::STATUS_LABELS),
+                Filter::make('duplicate')
+                    ->label('Только дубликаты')
+                    ->query(fn ($query) => $query->whereNotNull('duplicate_of_verification_request_id')),
             ])
             ->actions([
                 self::confirmAction(),

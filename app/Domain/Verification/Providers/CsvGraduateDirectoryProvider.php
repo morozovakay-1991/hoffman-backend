@@ -10,7 +10,7 @@ use App\Models\GraduateDirectory;
  */
 class CsvGraduateDirectoryProvider implements GraduateDirectoryProviderInterface
 {
-    public function matches(string $lastName, string $firstName, string $phone): bool
+    public function findMatch(string $lastName, string $firstName, string $phone): ?GraduateDirectory
     {
         $normalizedLastName = $this->normalizeName($lastName);
         $normalizedFirstName = $this->normalizeName($firstName);
@@ -19,8 +19,8 @@ class CsvGraduateDirectoryProvider implements GraduateDirectoryProviderInterface
         return GraduateDirectory::query()
             ->whereRaw('LOWER(TRIM(last_name)) = ?', [$normalizedLastName])
             ->whereRaw('LOWER(TRIM(first_name)) = ?', [$normalizedFirstName])
-            ->get(['phone'])
-            ->contains(fn (GraduateDirectory $graduate): bool => $this->normalizePhone($graduate->phone) === $normalizedPhone);
+            ->get()
+            ->first(fn (GraduateDirectory $graduate): bool => $this->normalizePhone($graduate->phone) === $normalizedPhone);
     }
 
     private function normalizeName(string $value): string

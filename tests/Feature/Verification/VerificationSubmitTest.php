@@ -138,4 +138,52 @@ class VerificationSubmitTest extends TestCase
 
         $response->assertStatus(401);
     }
+
+    public function test_a_second_account_claiming_the_same_directory_entry_goes_to_manual_review(): void
+    {
+        GraduateDirectory::create([
+            'last_name' => 'Kuznetsova',
+            'first_name' => 'Olga',
+            'phone' => '+7 (900) 555-11-22',
+            'imported_at' => now(),
+        ]);
+
+        $firstUser = User::factory()->create();
+
+        $this->actingAs($firstUser, 'sanctum')
+            ->postJson('/api/v1/verification/submit', [
+                'last_name' => 'Kuznetsova',
+                'first_name' => 'Olga',
+                'phone' => '89005551122',
+            ])
+            ->assertOk()
+            ->assertJsonPath('verification_request.status', 'confirmed')
+            ->assertJsonPath('verification_request.is_duplicate', false);
+
+        $this->assertSame(GraduateStatus::Confirmed, $firstUser->fresh()->graduate_status);
+
+        $secondUser = User::factory()->create();
+
+        $response = $this->actingAs($secondUser, 'sanctum')
+            ->postJson('/api/v1/verification/submit', [
+                'last_name' => 'Kuznetsova',
+                'first_name' => 'Olga',
+                'phone' => '89005551122',
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('verification_request.status', 'pending')
+            ->assertJsonPath('verification_request.is_duplicate', true);
+
+        $this->assertDatabaseHas('verification_requests', [
+            'user_id' => $secondUser->id,
+            'status' => 'pending',
+        ]);
+
+        $secondRequest = $secondUser->fresh()->verificationRequests()->latest('id')->first();
+        $this->assertNotNull($secondRequest->duplicate_of_verification_request_id);
+        $this->assertNotNull($secondRequest->graduate_directory_id);
+
+        $this->assertSame(GraduateStatus::Unverified, $secondUser->fresh()->graduate_status);
+    }
 }
