@@ -4,7 +4,10 @@ namespace Tests\Feature\Profile;
 
 use App\Models\EmailChangeRequest;
 use App\Models\User;
+use App\Notifications\EmailChangeCodeNotification;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class UpdateEmailTest extends TestCase
@@ -28,6 +31,35 @@ class UpdateEmailTest extends TestCase
             'new_email' => 'jane.new@example.com',
             'confirmed_at' => null,
         ]);
+    }
+
+    public function test_it_queues_the_confirmation_code_to_the_new_email_address(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create(['email' => 'jane@example.com']);
+
+        $this->actingAsApiUser($user)->patchJson('/api/v1/profile/email', [
+            'new_email' => 'jane.new@example.com',
+        ])->assertOk();
+
+        $changeRequest = EmailChangeRequest::where('user_id', $user->id)->firstOrFail();
+
+        $this->assertInstanceOf(ShouldQueue::class, new EmailChangeCodeNotification($changeRequest->code, 15));
+
+        Notification::assertSentOnDemand(
+            EmailChangeCodeNotification::class,
+            function (EmailChangeCodeNotification $notification, array $channels, object $notifiable) use ($changeRequest): bool {
+                return $notifiable->routes['mail'] === 'jane.new@example.com'
+                    && $notification->code === $changeRequest->code
+                    && $notification->ttlMinutes === 15
+                    && $channels === ['mail']
+                    && str_contains($notification->toMail($notifiable)->render(), $changeRequest->code);
+            }
+        );
+
+        // The confirmation code must never be delivered to the old address.
+        Notification::assertNotSentTo($user, EmailChangeCodeNotification::class);
     }
 
     public function test_it_rejects_a_new_email_that_is_already_taken(): void
