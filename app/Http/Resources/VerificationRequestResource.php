@@ -22,6 +22,7 @@ class VerificationRequestResource extends JsonResource
             'last_name' => $this->last_name,
             'first_name' => $this->first_name,
             'phone' => $this->phone,
+            'is_duplicate' => $this->duplicate_of_verification_request_id !== null,
             'reviewed_at' => $this->reviewed_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

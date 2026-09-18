@@ -15,11 +15,23 @@ class VerificationService
     }
 
     /**
-     * Create or update the user's verification request and auto-confirm it on a directory match.
+     * Create or update the user's verification request and auto-confirm it on a directory match,
+     * unless that same directory entry is already confirmed for another user, in which case the
+     * request is flagged as a duplicate and left pending for manual review.
      */
     public function submit(User $user, string $lastName, string $firstName, string $phone): VerificationRequest
     {
-        $isMatch = $this->graduateDirectoryProvider->matches($lastName, $firstName, $phone);
+        $match = $this->graduateDirectoryProvider->findMatch($lastName, $firstName, $phone);
+
+        $duplicateOf = $match
+            ? VerificationRequest::query()
+                ->where('graduate_directory_id', $match->id)
+                ->where('status', VerificationStatus::Confirmed)
+                ->where('user_id', '!=', $user->id)
+                ->first()
+            : null;
+
+        $status = $match && ! $duplicateOf ? VerificationStatus::Confirmed : VerificationStatus::Pending;
 
         $verificationRequest = VerificationRequest::updateOrCreate(
             ['user_id' => $user->id],
@@ -27,11 +39,13 @@ class VerificationService
                 'last_name' => $lastName,
                 'first_name' => $firstName,
                 'phone' => $phone,
-                'status' => $isMatch ? VerificationStatus::Confirmed : VerificationStatus::Pending,
+                'graduate_directory_id' => $match?->id,
+                'duplicate_of_verification_request_id' => $duplicateOf?->id,
+                'status' => $status,
             ],
         );
 
-        if ($isMatch) {
+        if ($status === VerificationStatus::Confirmed) {
             $user->update(['graduate_status' => GraduateStatus::Confirmed]);
         }
 

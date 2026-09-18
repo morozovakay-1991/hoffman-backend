@@ -2,10 +2,12 @@
 
 namespace App\Domain\Verification\Contracts;
 
+use App\Models\GraduateDirectory;
+
 interface GraduateDirectoryProviderInterface
 {
     /**
-     * Determine whether the given identity matches an entry in the graduate directory.
+     * Find the graduate directory entry matching the given identity, if any.
      */
-    public function matches(string $lastName, string $firstName, string $phone): bool;
+    public function findMatch(string $lastName, string $firstName, string $phone): ?GraduateDirectory;
 }
