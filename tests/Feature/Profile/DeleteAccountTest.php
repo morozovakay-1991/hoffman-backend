@@ -54,4 +54,40 @@ class DeleteAccountTest extends TestCase
     {
         $this->deleteJson('/api/v1/profile')->assertStatus(401);
     }
+
+    public function test_it_cancels_a_pending_deletion_request_when_deleting_immediately(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAsApiUser($user)->postJson('/api/v1/profile/deletion-request')->assertStatus(201);
+
+        $this->actingAsApiUser($user)->deleteJson('/api/v1/profile')->assertStatus(204);
+
+        $this->assertDatabaseHas('deletion_requests', [
+            'user_id' => $user->id,
+            'status' => 'cancelled',
+        ]);
+        $this->assertDatabaseMissing('deletion_requests', [
+            'user_id' => $user->id,
+            'status' => 'pending',
+        ]);
+    }
+
+    public function test_it_leaves_no_pending_deletion_request_for_the_scheduled_command_to_pick_up(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAsApiUser($user)
+            ->postJson('/api/v1/profile/deletion-request')
+            ->assertStatus(201);
+
+        $this->actingAsApiUser($user)->deleteJson('/api/v1/profile')->assertStatus(204);
+
+        $this->artisan('app:process-deletion-requests')->assertExitCode(0);
+
+        $this->assertDatabaseHas('deletion_requests', [
+            'user_id' => $user->id,
+            'status' => 'cancelled',
+        ]);
+    }
 }

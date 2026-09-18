@@ -7,6 +7,8 @@ use App\Domain\Profile\Exceptions\InvalidOldPasswordException;
 use App\Models\DeletionRequest;
 use App\Models\NotificationSetting;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class ProfileService
@@ -29,7 +31,7 @@ class ProfileService
     public function updatePassword(User $user, string $oldPassword, string $newPassword): void
     {
         if (! Hash::check($oldPassword, $user->password)) {
-            throw new InvalidOldPasswordException();
+            throw new InvalidOldPasswordException;
         }
 
         $user->update(['password' => $newPassword]);
@@ -65,19 +67,36 @@ class ProfileService
         $hasPendingRequest = $user->deletionRequests()->where('status', 'pending')->exists();
 
         if ($hasPendingRequest) {
-            throw new DeletionAlreadyRequestedException();
+            throw new DeletionAlreadyRequestedException;
         }
 
-        return $user->deletionRequests()->create([
-            'status' => 'pending',
-            'reason' => $reason,
-            'scheduled_for' => now()->addDays(self::DELETION_GRACE_PERIOD_DAYS),
-        ]);
+        // A partial unique index on (user_id) WHERE status = 'pending' backs this
+        // up at the database level: if two requests race past the exists() check
+        // above, the second insert fails and is translated into the same domain
+        // exception instead of creating a duplicate pending request.
+        try {
+            return $user->deletionRequests()->create([
+                'status' => 'pending',
+                'reason' => $reason,
+                'scheduled_for' => now()->addDays(self::DELETION_GRACE_PERIOD_DAYS),
+            ]);
+        } catch (UniqueConstraintViolationException $e) {
+            throw new DeletionAlreadyRequestedException;
+        }
     }
 
+    /**
+     * Delete the account immediately. Any deletion request(s) still pending
+     * for this user (from the grace-period flow) are cancelled so they are
+     * not later picked up by app:process-deletion-requests for an account
+     * that no longer exists.
+     */
     public function deleteNow(User $user): void
     {
-        $user->tokens()->delete();
-        $user->delete();
+        DB::transaction(function () use ($user) {
+            $user->deletionRequests()->where('status', 'pending')->update(['status' => 'cancelled']);
+            $user->tokens()->delete();
+            $user->delete();
+        });
     }
 }
