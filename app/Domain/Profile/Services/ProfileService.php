@@ -31,7 +31,7 @@ class ProfileService
     public function updatePassword(User $user, string $oldPassword, string $newPassword): void
     {
         if (! Hash::check($oldPassword, $user->password)) {
-            throw new InvalidOldPasswordException;
+            throw new InvalidOldPasswordException();
         }
 
         $user->update(['password' => $newPassword]);
@@ -67,7 +67,7 @@ class ProfileService
         $hasPendingRequest = $user->deletionRequests()->where('status', 'pending')->exists();
 
         if ($hasPendingRequest) {
-            throw new DeletionAlreadyRequestedException;
+            throw new DeletionAlreadyRequestedException();
         }
 
         // A partial unique index on (user_id) WHERE status = 'pending' backs this
@@ -81,7 +81,7 @@ class ProfileService
                 'scheduled_for' => now()->addDays(self::DELETION_GRACE_PERIOD_DAYS),
             ]);
         } catch (UniqueConstraintViolationException $e) {
-            throw new DeletionAlreadyRequestedException;
+            throw new DeletionAlreadyRequestedException();
         }
     }
 
