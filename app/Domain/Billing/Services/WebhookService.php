@@ -9,6 +9,7 @@ use App\Models\PaymentWebhookEvent;
 use App\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\StripeObject;
@@ -153,16 +154,17 @@ class WebhookService
      */
     private function handleCloudPaymentsSuccess(array $data): void
     {
-        $userId = $data['AccountId'] ?? null;
+        $invoiceId = (string) ($data['InvoiceId'] ?? '');
 
-        $subscription = Subscription::query()
-            ->where('payment_provider', 'cloudpayments')
-            ->when($userId !== null, fn ($query) => $query->where('user_id', $userId))
-            ->whereIn('status', ['pending', 'active'])
-            ->latest('id')
-            ->first();
+        $subscription = $this->findCloudPaymentsSubscription($invoiceId);
 
         if ($subscription === null) {
+            Log::warning('CloudPayments webhook: no subscription bound to InvoiceId, ignoring notification.', [
+                'invoice_id' => $invoiceId,
+                'transaction_id' => $data['TransactionId'] ?? null,
+                'account_id' => $data['AccountId'] ?? null,
+            ]);
+
             return;
         }
 
@@ -210,6 +212,26 @@ class WebhookService
         }
 
         return null;
+    }
+
+    /**
+     * Resolves the subscription bound to a CloudPayments checkout by the InvoiceId we
+     * generated and handed to CloudPayments when the checkout session was created (stored
+     * on the subscription as external_customer_id). The notification's AccountId/Email are
+     * never used to pick the subscription: they are supplied by the webhook payload itself
+     * and are not a reliable link back to a specific checkout attempt.
+     */
+    private function findCloudPaymentsSubscription(string $invoiceId): ?Subscription
+    {
+        if ($invoiceId === '') {
+            return null;
+        }
+
+        return Subscription::query()
+            ->where('payment_provider', 'cloudpayments')
+            ->where('external_customer_id', $invoiceId)
+            ->latest('id')
+            ->first();
     }
 
     private function expiresAtForPlan(string $planId): ?Carbon

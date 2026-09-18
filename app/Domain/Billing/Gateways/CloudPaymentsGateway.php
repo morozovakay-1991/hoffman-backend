@@ -17,18 +17,25 @@ class CloudPaymentsGateway implements PaymentGatewayInterface
         $planData = PlanCatalog::find($plan);
         $amount = PlanCatalog::priceFor($plan, $currency);
 
+        // Generated up front and returned to the caller (rather than read back from
+        // CloudPayments' response) so it can be bound to the subscription *before* the
+        // webhook arrives. The webhook later echoes this same InvoiceId back, letting us
+        // look up the subscription by an identifier we control instead of trusting
+        // whatever AccountId/Email the notification happens to carry.
+        $invoiceId = (string) Str::uuid();
+
         $response = $this->client()->post('/orders/create', [
             'Amount' => $amount !== null ? round($amount / 100, 2) : null,
             'Currency' => strtoupper($currency),
             'Description' => $planData['name'] ?? $plan,
             'Email' => $user->email,
             'AccountId' => (string) $user->id,
-            'InvoiceId' => (string) Str::uuid(),
+            'InvoiceId' => $invoiceId,
         ])->throw()->json();
 
         return [
             'checkout_url' => $response['Model']['Url'] ?? null,
-            'invoice_id' => $response['Model']['Number'] ?? null,
+            'invoice_id' => $invoiceId,
         ];
     }
 
