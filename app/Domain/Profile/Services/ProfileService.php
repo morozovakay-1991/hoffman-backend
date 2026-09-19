@@ -17,7 +17,8 @@ class ProfileService
 
     public function __construct(
         private readonly AccountDeletionService $accountDeletionService,
-    ) {}
+    ) {
+    }
 
     /**
      * @param  array{name?: string, timezone?: string}  $data
