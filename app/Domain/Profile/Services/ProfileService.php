@@ -15,6 +15,11 @@ class ProfileService
 {
     private const DELETION_GRACE_PERIOD_DAYS = 30;
 
+    public function __construct(
+        private readonly AccountDeletionService $accountDeletionService,
+    ) {
+    }
+
     /**
      * @param  array{name?: string, timezone?: string}  $data
      */
@@ -89,13 +94,15 @@ class ProfileService
      * Delete the account immediately. Any deletion request(s) still pending
      * for this user (from the grace-period flow) are cancelled so they are
      * not later picked up by app:process-deletion-requests for an account
-     * that no longer exists.
+     * that no longer exists. Personal data is purged the same way as the
+     * grace-period flow (see AccountDeletionService::purgePersonalData()),
+     * keeping subscriptions/invoices intact for accounting purposes.
      */
     public function deleteNow(User $user): void
     {
         DB::transaction(function () use ($user) {
             $user->deletionRequests()->where('status', 'pending')->update(['status' => 'cancelled']);
-            $user->tokens()->delete();
+            $this->accountDeletionService->purgePersonalData($user);
             $user->delete();
         });
     }

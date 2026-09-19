@@ -3,6 +3,7 @@
 namespace App\Domain\Profile\Services;
 
 use App\Models\DeletionRequest;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class AccountDeletionService
@@ -18,11 +19,7 @@ class AccountDeletionService
             $user = $deletionRequest->user()->withTrashed()->first();
 
             if ($user !== null) {
-                $user->tokens()->delete();
-                $user->diaryEntries()->delete();
-                $user->verificationRequests()->delete();
-                $user->notificationSettings()->delete();
-                $user->emailChangeRequests()->delete();
+                $this->purgePersonalData($user);
 
                 if (! $user->trashed()) {
                     $user->delete();
@@ -34,5 +31,20 @@ class AccountDeletionService
                 'completed_at' => now(),
             ])->save();
         });
+    }
+
+    /**
+     * Remove a user's personal data ahead of the account itself being
+     * deleted, whether that happens immediately or after the grace period.
+     * Subscriptions and invoices are intentionally kept for accounting
+     * purposes.
+     */
+    public function purgePersonalData(User $user): void
+    {
+        $user->tokens()->delete();
+        $user->diaryEntries()->delete();
+        $user->verificationRequests()->delete();
+        $user->notificationSettings()->delete();
+        $user->emailChangeRequests()->delete();
     }
 }

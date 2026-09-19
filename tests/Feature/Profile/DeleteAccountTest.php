@@ -2,7 +2,15 @@
 
 namespace Tests\Feature\Profile;
 
+use App\Enums\VerificationStatus;
+use App\Models\DiaryDay;
+use App\Models\DiaryEntry;
+use App\Models\EmailChangeRequest;
+use App\Models\Invoice;
+use App\Models\NotificationSetting;
+use App\Models\Subscription;
 use App\Models\User;
+use App\Models\VerificationRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -89,5 +97,61 @@ class DeleteAccountTest extends TestCase
             'user_id' => $user->id,
             'status' => 'cancelled',
         ]);
+    }
+
+    public function test_it_purges_personal_data_but_keeps_invoices_and_subscriptions(): void
+    {
+        $user = User::factory()->create();
+
+        $day = DiaryDay::factory()->create(['day_number' => 1]);
+        DiaryEntry::create([
+            'user_id' => $user->id,
+            'diary_day_id' => $day->id,
+            'answer_text' => 'My answer',
+            'completed_date' => now()->toDateString(),
+            'completed_at' => now(),
+        ]);
+
+        VerificationRequest::create([
+            'user_id' => $user->id,
+            'last_name' => 'Ivanov',
+            'first_name' => 'Petr',
+            'phone' => '+79001234567',
+            'status' => VerificationStatus::Pending,
+        ]);
+
+        NotificationSetting::create([
+            'user_id' => $user->id,
+            'push_enabled' => true,
+            'email_enabled' => true,
+            'marketing_enabled' => false,
+        ]);
+
+        EmailChangeRequest::create([
+            'user_id' => $user->id,
+            'old_email' => $user->email,
+            'new_email' => 'new@example.com',
+            'code' => '123456',
+            'attempts' => 0,
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        $subscription = Subscription::factory()->create(['user_id' => $user->id]);
+        $invoice = Invoice::factory()->create([
+            'user_id' => $user->id,
+            'subscription_id' => $subscription->id,
+        ]);
+
+        $this->actingAsApiUser($user)->deleteJson('/api/v1/profile')->assertStatus(204);
+
+        $this->assertDatabaseCount('diary_entries', 0);
+        $this->assertDatabaseCount('verification_requests', 0);
+        $this->assertDatabaseCount('notification_settings', 0);
+        $this->assertDatabaseCount('email_change_requests', 0);
+
+        $this->assertDatabaseHas('subscriptions', ['id' => $subscription->id]);
+        $this->assertDatabaseHas('invoices', ['id' => $invoice->id]);
+
+        $this->assertSoftDeleted('users', ['id' => $user->id]);
     }
 }
