@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Domain\Content\Exceptions\AccessDeniedException;
 use App\Domain\Content\Services\AccessLevelService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MeditationResource;
@@ -66,9 +65,7 @@ class MeditationController extends Controller
 
         $user = $request->user('sanctum');
 
-        if (! $this->accessLevelService->canAccess($user, AccessLevelService::CONTENT_MEDITATION, $meditation)) {
-            throw new AccessDeniedException();
-        }
+        $this->accessLevelService->assertCanAccess($user, AccessLevelService::CONTENT_MEDITATION, $meditation);
 
         $meditation->setAttribute('is_locked', false);
         $meditation->load('topics');
@@ -91,9 +88,7 @@ class MeditationController extends Controller
 
         $user = $request->user('sanctum');
 
-        if (! $this->accessLevelService->canAccess($user, AccessLevelService::CONTENT_MEDITATION, $meditation)) {
-            throw new AccessDeniedException();
-        }
+        $this->accessLevelService->assertCanAccess($user, AccessLevelService::CONTENT_MEDITATION, $meditation);
 
         $expiresAt = now()->addHour();
         $url = Storage::disk('s3')->temporaryUrl($meditation->audio_path, $expiresAt);

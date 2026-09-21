@@ -2,6 +2,7 @@
 
 namespace App\Domain\Content\Services;
 
+use App\Domain\Content\Exceptions\AccessDeniedException;
 use App\Enums\GraduateStatus;
 use App\Models\Meditation;
 use App\Models\User;
@@ -54,6 +55,18 @@ class AccessLevelService
         }
 
         return true;
+    }
+
+    /**
+     * Same rule as canAccess(), but throws instead of returning false, so
+     * callers that need to deny access (rather than merely flag it) don't
+     * have to repeat the `if (!canAccess(...)) { throw ... }` check themselves.
+     */
+    public function assertCanAccess(?User $user, string $contentType, Model $content): void
+    {
+        if (!$this->canAccess($user, $contentType, $content)) {
+            throw new AccessDeniedException();
+        }
     }
 
     private function hasActiveSubscription(?User $user): bool

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Domain\Content\Exceptions\AccessDeniedException;
 use App\Domain\Content\Services\AccessLevelService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TopicResource;
@@ -61,9 +60,7 @@ class TopicController extends Controller
 
         $user = $request->user('sanctum');
 
-        if (!$this->accessLevelService->canAccess($user, AccessLevelService::CONTENT_TOPIC, $topic)) {
-            throw new AccessDeniedException();
-        }
+        $this->accessLevelService->assertCanAccess($user, AccessLevelService::CONTENT_TOPIC, $topic);
 
         $topic->setAttribute('is_locked', false);
         $topic->load(['meditations', 'tools']);
