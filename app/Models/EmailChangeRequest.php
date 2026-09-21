@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasOtpCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -13,6 +14,8 @@ use Illuminate\Support\Carbon;
  */
 class EmailChangeRequest extends Model
 {
+    use HasOtpCode;
+
     public const MAX_ATTEMPTS = 5;
 
     /**
@@ -42,16 +45,6 @@ class EmailChangeRequest extends Model
             'expires_at' => 'datetime',
             'confirmed_at' => 'datetime',
         ];
-    }
-
-    public function isExpired(): bool
-    {
-        return $this->expires_at->isPast();
-    }
-
-    public function hasTooManyAttempts(): bool
-    {
-        return $this->attempts >= self::MAX_ATTEMPTS;
     }
 
     /**

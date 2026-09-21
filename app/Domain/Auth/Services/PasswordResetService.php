@@ -9,6 +9,7 @@ use App\Domain\Auth\Exceptions\TooManyAttemptsException;
 use App\Models\PasswordResetCode;
 use App\Models\User;
 use App\Notifications\PasswordResetCodeNotification;
+use App\Support\OtpCodeGenerator;
 
 class PasswordResetService
 {
@@ -30,7 +31,7 @@ class PasswordResetService
 
         PasswordResetCode::where('email', $email)->delete();
 
-        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $code = OtpCodeGenerator::generate();
 
         PasswordResetCode::create([
             'email' => $email,
