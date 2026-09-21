@@ -5,6 +5,7 @@ namespace Tests\Feature\Diary;
 use App\Enums\GraduateStatus;
 use App\Models\DiaryDay;
 use App\Models\DiaryEntry;
+use App\Models\Subscription;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -77,6 +78,7 @@ class DiaryAnswerTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         $response = $this->actingAsApiUser($user)
             ->postJson('/api/v1/diary/days/1/answer', ['answer' => 'My answer']);
@@ -90,6 +92,7 @@ class DiaryAnswerTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         $response = $this->postAnswer($user, 1, 'Not/A_Timezone');
 
@@ -102,6 +105,7 @@ class DiaryAnswerTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         $response = $this->actingAsApiUser($user)
             ->withHeader('X-Timezone', 'UTC')
@@ -118,6 +122,7 @@ class DiaryAnswerTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         // Progress is on day 1; day 3 has not been reached yet.
         $response = $this->postAnswer($user, 3);
@@ -132,6 +137,7 @@ class DiaryAnswerTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
         $this->completeDay($user, 1);
 
         // Progress has moved to day 2; day 1 is already completed.
@@ -148,6 +154,7 @@ class DiaryAnswerTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         $response = $this->postAnswer($user, 1, 'UTC', 'My first day answer');
 
@@ -174,6 +181,7 @@ class DiaryAnswerTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         Carbon::setTestNow(Carbon::parse('2026-06-15 10:00:00', 'UTC'));
 
@@ -192,6 +200,7 @@ class DiaryAnswerTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         Carbon::setTestNow(Carbon::parse('2026-06-15 10:00:00', 'UTC'));
         $this->postAnswer($user, 1, 'UTC')->assertCreated();
@@ -217,6 +226,7 @@ class DiaryAnswerTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         // A single frozen instant, late in the day UTC.
         Carbon::setTestNow(Carbon::parse('2026-06-15 23:30:00', 'UTC'));
@@ -244,6 +254,7 @@ class DiaryAnswerTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         // Europe/Moscow is UTC+3: local date is 2026-06-15.
         Carbon::setTestNow(Carbon::parse('2026-06-15 15:00:00', 'UTC'));
@@ -266,6 +277,7 @@ class DiaryAnswerTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         Carbon::setTestNow(Carbon::parse('2026-06-15 23:30:00', 'UTC'));
 
@@ -287,6 +299,7 @@ class DiaryAnswerTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         Carbon::setTestNow(Carbon::parse('2026-06-15 23:30:00', 'UTC'));
         $this->postAnswer($user, 1, 'Pacific/Niue')->assertCreated();

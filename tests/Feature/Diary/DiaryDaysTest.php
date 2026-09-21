@@ -5,6 +5,7 @@ namespace Tests\Feature\Diary;
 use App\Enums\GraduateStatus;
 use App\Models\DiaryDay;
 use App\Models\DiaryEntry;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -70,6 +71,7 @@ class DiaryDaysTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         $response = $this->actingAsApiUser($user)->getJson('/api/v1/diary/days');
 
@@ -87,6 +89,7 @@ class DiaryDaysTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         $this->completeDay($user, 1);
         $this->completeDay($user, 2);
@@ -109,6 +112,7 @@ class DiaryDaysTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         $response = $this->actingAsApiUser($user)->getJson('/api/v1/diary/days');
 
@@ -144,6 +148,7 @@ class DiaryDaysTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         $response = $this->actingAsApiUser($user)->getJson('/api/v1/diary/days/1');
 
@@ -157,6 +162,7 @@ class DiaryDaysTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
         $this->completeDay($user, 1);
 
         $response = $this->actingAsApiUser($user)->getJson('/api/v1/diary/days/1');
@@ -170,6 +176,7 @@ class DiaryDaysTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         // Progress is on day 1, so day 5 has not been reached yet.
         $response = $this->actingAsApiUser($user)->getJson('/api/v1/diary/days/5');
@@ -182,6 +189,7 @@ class DiaryDaysTest extends TestCase
     {
         $this->seedDays();
         $user = User::factory()->graduateStatus(GraduateStatus::Confirmed)->create();
+        Subscription::factory()->for($user)->create(['expires_at' => now()->addYear()]);
 
         $response = $this->actingAsApiUser($user)->getJson('/api/v1/diary/days/999');
 
