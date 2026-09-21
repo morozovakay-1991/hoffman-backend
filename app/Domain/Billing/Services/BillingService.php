@@ -3,6 +3,7 @@
 namespace App\Domain\Billing\Services;
 
 use App\Domain\Billing\Contracts\PaymentGatewayInterface;
+use App\Domain\Billing\Exceptions\SubscriptionNotFoundException;
 use App\Domain\Billing\Gateways\CloudPaymentsGateway;
 use App\Domain\Billing\Gateways\StripeGateway;
 use App\Models\Subscription;
@@ -20,6 +21,34 @@ class BillingService
         return strtoupper($country) === 'RU'
             ? App::make(CloudPaymentsGateway::class)
             : App::make(StripeGateway::class);
+    }
+
+    /**
+     * The user's most recent subscription regardless of status, or an
+     * unsaved `status: "none"` placeholder if they have never subscribed.
+     * Wrapping either result in SubscriptionResource yields a consistent
+     * shape without duplicating the resource's field list.
+     */
+    public function latestSubscriptionFor(User $user): Subscription
+    {
+        return $user->subscriptions()->latest('id')->first()
+            ?? new Subscription(['status' => 'none', 'auto_renew' => false]);
+    }
+
+    /**
+     * The user's current active subscription (see Subscription::isActive()).
+     *
+     * @throws SubscriptionNotFoundException
+     */
+    public function activeSubscriptionFor(User $user): Subscription
+    {
+        $subscription = $user->subscriptions()->active()->latest('id')->first();
+
+        if (! $subscription) {
+            throw new SubscriptionNotFoundException();
+        }
+
+        return $subscription;
     }
 
     /**
