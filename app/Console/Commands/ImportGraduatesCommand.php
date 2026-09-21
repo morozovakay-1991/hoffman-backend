@@ -2,9 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\GraduateDirectory;
+use App\Domain\Verification\Services\GraduateDirectoryImportService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Carbon;
 
 class ImportGraduatesCommand extends Command
 {
@@ -18,7 +17,7 @@ class ImportGraduatesCommand extends Command
      */
     protected $description = 'Import the graduate directory from a CSV file';
 
-    public function handle(): int
+    public function handle(GraduateDirectoryImportService $importer): int
     {
         $path = $this->argument('path');
 
@@ -28,65 +27,19 @@ class ImportGraduatesCommand extends Command
             return self::FAILURE;
         }
 
-        $handle = fopen($path, 'rb');
+        $result = $importer->import($path);
 
-        if ($handle === false) {
-            $this->error("Unable to open file: {$path}");
+        $message = "Imported {$result['imported']} graduate(s).";
 
-            return self::FAILURE;
-        }
-
-        $importedAt = Carbon::now();
-        $imported = 0;
-        $skipped = 0;
-        $batch = [];
-
-        while (($row = fgetcsv($handle)) !== false) {
-            if (count($row) < 3) {
-                $skipped++;
-
-                continue;
-            }
-
-            [$lastName, $firstName, $phone] = array_map('trim', array_slice($row, 0, 3));
-
-            if ($lastName === '' || $firstName === '' || $phone === '') {
-                $skipped++;
-
-                continue;
-            }
-
-            if (strcasecmp($lastName, 'last_name') === 0 && strcasecmp($firstName, 'first_name') === 0) {
-                continue;
-            }
-
-            $batch[] = [
-                'last_name' => $lastName,
-                'first_name' => $firstName,
-                'phone' => $phone,
-                'imported_at' => $importedAt,
-            ];
-            $imported++;
-
-            if (count($batch) >= 500) {
-                GraduateDirectory::query()->insert($batch);
-                $batch = [];
-            }
-        }
-
-        fclose($handle);
-
-        if ($batch !== []) {
-            GraduateDirectory::query()->insert($batch);
-        }
-
-        $message = "Imported {$imported} graduate(s).";
-
-        if ($skipped > 0) {
-            $message .= " Skipped {$skipped} invalid row(s).";
+        if ($result['errors'] !== []) {
+            $message .= ' Skipped '.count($result['errors']).' invalid row(s).';
         }
 
         $this->info($message);
+
+        foreach ($result['errors'] as $error) {
+            $this->warn($error);
+        }
 
         return self::SUCCESS;
     }

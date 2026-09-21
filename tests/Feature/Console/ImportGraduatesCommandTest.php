@@ -38,4 +38,35 @@ class ImportGraduatesCommandTest extends TestCase
         $this->assertSame(1, $exitCode);
         $this->assertDatabaseCount('graduate_directory', 0);
     }
+
+    public function test_it_reports_invalid_rows_without_failing_the_command(): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'graduates').'.csv';
+        file_put_contents($path, implode("\n", [
+            'last_name,first_name,phone',
+            'Petrov,Ivan,+7 (900) 123-45-67',
+            'Sidorova,Anna,12345',
+        ]));
+
+        $exitCode = Artisan::call('graduates:import', ['path' => $path]);
+
+        unlink($path);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertStringContainsString('Imported 1 graduate(s). Skipped 1 invalid row(s).', Artisan::output());
+        $this->assertDatabaseCount('graduate_directory', 1);
+    }
+
+    public function test_it_reports_missing_required_headers(): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'graduates').'.csv';
+        file_put_contents($path, "surname,name\nPetrov,Ivan\n");
+
+        $exitCode = Artisan::call('graduates:import', ['path' => $path]);
+
+        unlink($path);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertDatabaseCount('graduate_directory', 0);
+    }
 }
