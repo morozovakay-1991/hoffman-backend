@@ -59,6 +59,33 @@ class SubscriptionTest extends TestCase
             ->assertJsonPath('subscription.is_active', false);
     }
 
+    public function test_a_subscription_past_its_expiry_date_is_reported_as_inactive_even_if_still_marked_active(): void
+    {
+        $user = User::factory()->create();
+        Subscription::factory()->for($user)->create([
+            'status' => 'active',
+            'expires_at' => now()->subDay(),
+        ]);
+
+        $response = $this->actingAsApiUser($user)->getJson('/api/v1/subscription');
+
+        $response->assertOk()
+            ->assertJsonPath('subscription.status', 'active')
+            ->assertJsonPath('subscription.is_active', false);
+    }
+
+    public function test_a_subscription_in_grace_period_is_reported_as_active(): void
+    {
+        $user = User::factory()->create();
+        Subscription::factory()->for($user)->inGracePeriod()->create();
+
+        $response = $this->actingAsApiUser($user)->getJson('/api/v1/subscription');
+
+        $response->assertOk()
+            ->assertJsonPath('subscription.status', 'in_grace_period')
+            ->assertJsonPath('subscription.is_active', true);
+    }
+
     public function test_it_rejects_the_request_without_a_token(): void
     {
         $this->getJson('/api/v1/subscription')->assertStatus(401);

@@ -62,9 +62,46 @@ class PaymentMethodTest extends TestCase
             ->assertJsonPath('payment_method.checkout_url', 'https://api.cloudpayments.ru/orders/pay/card-update');
     }
 
+    public function test_it_updates_the_payment_method_for_a_subscription_in_grace_period(): void
+    {
+        $user = User::factory()->create();
+        $subscription = Subscription::factory()->for($user)->inGracePeriod()->create([
+            'payment_provider' => 'stripe',
+            'country' => 'US',
+            'currency' => 'USD',
+            'external_customer_id' => 'cus_test_grace',
+        ]);
+
+        $this->mock(StripeGateway::class, function (MockInterface $mock) use ($subscription) {
+            $mock->shouldReceive('updatePaymentMethod')
+                ->once()
+                ->with(\Mockery::on(fn (Subscription $arg) => $arg->id === $subscription->id))
+                ->andReturn(['checkout_url' => 'https://billing.stripe.com/session/xyz']);
+        });
+
+        $response = $this->actingAsApiUser($user)->postJson('/api/v1/billing/payment-method');
+
+        $response->assertOk()
+            ->assertJsonPath('payment_method.checkout_url', 'https://billing.stripe.com/session/xyz');
+    }
+
     public function test_it_returns_not_found_when_the_user_has_no_active_subscription(): void
     {
         $user = User::factory()->create();
+
+        $response = $this->actingAsApiUser($user)->postJson('/api/v1/billing/payment-method');
+
+        $response->assertStatus(404)
+            ->assertJsonPath('error.code', 'SUBSCRIPTION_NOT_FOUND');
+    }
+
+    public function test_it_returns_not_found_when_the_subscription_has_expired(): void
+    {
+        $user = User::factory()->create();
+        Subscription::factory()->for($user)->create([
+            'status' => 'active',
+            'expires_at' => now()->subDay(),
+        ]);
 
         $response = $this->actingAsApiUser($user)->postJson('/api/v1/billing/payment-method');
 

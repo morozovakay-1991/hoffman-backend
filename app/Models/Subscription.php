@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\SubscriptionFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,16 @@ class Subscription extends Model
 {
     /** @use HasFactory<SubscriptionFactory> */
     use HasFactory;
+
+    /**
+     * Statuses under which a subscription still grants access to paid
+     * content: a currently paid period ("active"), a trial period
+     * ("trialing"), or a billing retry window after a failed renewal
+     * ("in_grace_period"), during which access is not yet revoked.
+     *
+     * @var list<string>
+     */
+    public const ACTIVE_STATUSES = ['active', 'trialing', 'in_grace_period'];
 
     /**
      * The attributes that are mass assignable.
@@ -73,9 +84,29 @@ class Subscription extends Model
         return $this->hasMany(Invoice::class);
     }
 
+    /**
+     * The single source of truth for whether a subscription currently
+     * grants access: its status must be one of self::ACTIVE_STATUSES,
+     * and, if it has an expiry, that expiry must not have passed yet.
+     */
     public function isActive(): bool
     {
-        return in_array($this->status, ['active', 'trialing'], true)
+        return in_array($this->status, self::ACTIVE_STATUSES, true)
             && ($this->expires_at === null || $this->expires_at->isFuture());
+    }
+
+    /**
+     * Query-level equivalent of isActive(), for filtering subscriptions
+     * in the database rather than in PHP.
+     *
+     * @param  Builder<Subscription>  $query
+     * @return Builder<Subscription>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->whereIn('status', self::ACTIVE_STATUSES)
+            ->where(function (Builder $query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            });
     }
 }
