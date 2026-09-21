@@ -2,10 +2,9 @@
 
 namespace App\Domain\Diary\Services;
 
-use App\Domain\Diary\Exceptions\AccessDeniedException;
+use App\Domain\Content\Services\AccessLevelService;
 use App\Domain\Diary\Exceptions\AlreadyCompletedTodayException;
 use App\Domain\Diary\Exceptions\DayLockedException;
-use App\Enums\GraduateStatus;
 use App\Models\DiaryDay;
 use App\Models\DiaryEntry;
 use App\Models\User;
@@ -40,6 +39,10 @@ class DiaryService
      */
     private const TIMEZONE_JUMP_GRACE_HOURS = 3;
 
+    public function __construct(private readonly AccessLevelService $accessLevelService)
+    {
+    }
+
     /**
      * Return all 100 diary days for the user, each flagged with its status.
      *
@@ -47,7 +50,7 @@ class DiaryService
      */
     public function getDaysForUser(User $user): Collection
     {
-        $this->assertGraduate($user);
+        $this->accessLevelService->assertCanAccess($user, AccessLevelService::CONTENT_DIARY, $user);
 
         $completedCount = $this->completedDaysCount($user);
 
@@ -67,7 +70,7 @@ class DiaryService
      */
     public function getDayDetail(User $user, int $dayNumber): DiaryDay
     {
-        $this->assertGraduate($user);
+        $this->accessLevelService->assertCanAccess($user, AccessLevelService::CONTENT_DIARY, $user);
 
         $day = DiaryDay::query()->where('day_number', $dayNumber)->firstOrFail();
 
@@ -109,7 +112,7 @@ class DiaryService
      */
     public function saveAnswer(User $user, int $dayNumber, string $answer, string $timezone): DiaryEntry
     {
-        $this->assertGraduate($user);
+        $this->accessLevelService->assertCanAccess($user, AccessLevelService::CONTENT_DIARY, $user);
 
         $day = DiaryDay::query()->where('day_number', $dayNumber)->firstOrFail();
 
@@ -167,13 +170,6 @@ class DiaryService
 
         if ($offsetDeltaHours > $elapsedHours + self::TIMEZONE_JUMP_GRACE_HOURS) {
             throw new AlreadyCompletedTodayException();
-        }
-    }
-
-    private function assertGraduate(User $user): void
-    {
-        if ($user->graduate_status !== GraduateStatus::Confirmed) {
-            throw new AccessDeniedException();
         }
     }
 
