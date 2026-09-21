@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Domain\Billing\Exceptions\SubscriptionNotFoundException;
 use App\Domain\Billing\Services\BillingService;
 use App\Domain\Billing\Support\PlanCatalog;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Billing\CreateCheckoutSessionRequest;
 use App\Http\Resources\SubscriptionResource;
-use App\Models\Subscription;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -59,7 +57,7 @@ class BillingController extends Controller
      */
     public function cancel(Request $request): JsonResponse
     {
-        $subscription = $this->currentSubscription($request);
+        $subscription = $this->billingService->activeSubscriptionFor($request->user());
 
         $this->billingService->cancelSubscription($subscription);
 
@@ -76,27 +74,10 @@ class BillingController extends Controller
      */
     public function paymentMethod(Request $request): JsonResponse
     {
-        $subscription = $this->currentSubscription($request);
+        $subscription = $this->billingService->activeSubscriptionFor($request->user());
 
         return response()->json([
             'payment_method' => $this->billingService->updatePaymentMethod($subscription),
         ]);
-    }
-
-    /**
-     * @throws SubscriptionNotFoundException
-     */
-    private function currentSubscription(Request $request): Subscription
-    {
-        $subscription = $request->user()->subscriptions()
-            ->active()
-            ->latest('id')
-            ->first();
-
-        if (! $subscription) {
-            throw new SubscriptionNotFoundException();
-        }
-
-        return $subscription;
     }
 }
