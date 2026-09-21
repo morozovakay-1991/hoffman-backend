@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Domain\Content\Exceptions\AccessDeniedException;
 use App\Domain\Content\Services\AccessLevelService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ArticleResource;
@@ -50,9 +49,7 @@ class ArticleController extends Controller
 
         $user = $request->user('sanctum');
 
-        if (!$this->accessLevelService->canAccess($user, AccessLevelService::CONTENT_ARTICLE, $article)) {
-            throw new AccessDeniedException();
-        }
+        $this->accessLevelService->assertCanAccess($user, AccessLevelService::CONTENT_ARTICLE, $article);
 
         return new ArticleResource($article);
     }

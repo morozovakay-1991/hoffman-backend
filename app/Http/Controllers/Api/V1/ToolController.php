@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Domain\Content\Exceptions\AccessDeniedException;
 use App\Domain\Content\Services\AccessLevelService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ToolResource;
@@ -61,9 +60,7 @@ class ToolController extends Controller
 
         $user = $request->user('sanctum');
 
-        if (!$this->accessLevelService->canAccess($user, AccessLevelService::CONTENT_TOOL, $tool)) {
-            throw new AccessDeniedException();
-        }
+        $this->accessLevelService->assertCanAccess($user, AccessLevelService::CONTENT_TOOL, $tool);
 
         $tool->setAttribute('is_locked', false);
         $tool->load('topics');
