@@ -69,10 +69,46 @@ class CancelSubscriptionTest extends TestCase
         $this->assertSame('cancelled', $subscription->refresh()->status);
     }
 
+    public function test_it_cancels_a_subscription_in_grace_period(): void
+    {
+        $user = User::factory()->create();
+        $subscription = Subscription::factory()->for($user)->inGracePeriod()->create([
+            'payment_provider' => 'stripe',
+            'country' => 'US',
+            'currency' => 'USD',
+            'external_subscription_id' => 'sub_test_grace',
+        ]);
+
+        $this->mock(StripeGateway::class, function (MockInterface $mock) use ($subscription) {
+            $mock->shouldReceive('cancelSubscription')
+                ->once()
+                ->with(\Mockery::on(fn (Subscription $arg) => $arg->id === $subscription->id));
+        });
+
+        $response = $this->actingAsApiUser($user)->postJson('/api/v1/billing/cancel');
+
+        $response->assertOk()
+            ->assertJsonPath('subscription.status', 'cancelled');
+    }
+
     public function test_it_returns_not_found_when_the_user_has_no_active_subscription(): void
     {
         $user = User::factory()->create();
         Subscription::factory()->cancelled()->create(['user_id' => $user->id]);
+
+        $response = $this->actingAsApiUser($user)->postJson('/api/v1/billing/cancel');
+
+        $response->assertStatus(404)
+            ->assertJsonPath('error.code', 'SUBSCRIPTION_NOT_FOUND');
+    }
+
+    public function test_it_returns_not_found_when_the_subscription_has_expired(): void
+    {
+        $user = User::factory()->create();
+        Subscription::factory()->for($user)->create([
+            'status' => 'active',
+            'expires_at' => now()->subDay(),
+        ]);
 
         $response = $this->actingAsApiUser($user)->postJson('/api/v1/billing/cancel');
 

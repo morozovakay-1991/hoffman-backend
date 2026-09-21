@@ -58,4 +58,16 @@ class SubscriptionFactory extends Factory
             'cancelled_at' => now(),
         ]);
     }
+
+    /**
+     * Indicate that the subscription is in its post-renewal-failure grace
+     * period: still active while Apple/Google/Stripe retry the payment.
+     */
+    public function inGracePeriod(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'in_grace_period',
+            'expires_at' => fake()->dateTimeBetween('now', '+16 days'),
+        ]);
+    }
 }

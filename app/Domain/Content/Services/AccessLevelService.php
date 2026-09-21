@@ -34,13 +34,6 @@ class AccessLevelService
     public const CONTENT_DIARY = 'diary';
 
     /**
-     * Subscription statuses that are considered currently active.
-     *
-     * @var list<string>
-     */
-    private const ACTIVE_SUBSCRIPTION_STATUSES = ['active', 'trialing', 'in_grace_period'];
-
-    /**
      * The $user parameter is nullable to represent unauthenticated visitors,
      * who are treated the same as authenticated users without an active subscription.
      */
@@ -69,11 +62,6 @@ class AccessLevelService
             return false;
         }
 
-        return $user->subscriptions()
-            ->whereIn('status', self::ACTIVE_SUBSCRIPTION_STATUSES)
-            ->where(function ($query) {
-                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
-            })
-            ->exists();
+        return $user->subscriptions()->active()->exists();
     }
 }

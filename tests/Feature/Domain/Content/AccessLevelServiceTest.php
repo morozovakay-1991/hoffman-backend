@@ -46,6 +46,17 @@ class AccessLevelServiceTest extends TestCase
         $this->assertTrue($this->service->canAccess($user, AccessLevelService::CONTENT_ARTICLE, $paid));
     }
 
+    public function test_user_with_a_subscription_in_grace_period_is_treated_as_subscribed(): void
+    {
+        $user = User::factory()->graduateStatus(GraduateStatus::Unverified)->create();
+        Subscription::factory()->for($user)->inGracePeriod()->create();
+        $paid = Meditation::factory()->make();
+
+        $this->assertTrue($this->service->canAccess($user, AccessLevelService::CONTENT_MEDITATION, $paid));
+        $this->assertTrue($this->service->canAccess($user, AccessLevelService::CONTENT_TOOL, $paid));
+        $this->assertTrue($this->service->canAccess($user, AccessLevelService::CONTENT_TOPIC, $paid));
+    }
+
     public function test_subscribed_non_confirmed_graduate_gets_full_content_but_not_diary(): void
     {
         $user = User::factory()->graduateStatus(GraduateStatus::Unverified)->create();
