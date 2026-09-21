@@ -8,6 +8,7 @@ use App\Domain\Profile\Exceptions\TooManyEmailChangeAttemptsException;
 use App\Models\EmailChangeRequest;
 use App\Models\User;
 use App\Notifications\EmailChangeCodeNotification;
+use App\Support\OtpCodeGenerator;
 use Illuminate\Support\Facades\Notification;
 
 class EmailChangeService
@@ -23,7 +24,7 @@ class EmailChangeService
     {
         EmailChangeRequest::where('user_id', $user->id)->whereNull('confirmed_at')->delete();
 
-        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $code = OtpCodeGenerator::generate();
 
         $changeRequest = EmailChangeRequest::create([
             'user_id' => $user->id,

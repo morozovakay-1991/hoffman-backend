@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasOtpCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -13,6 +14,8 @@ use Illuminate\Support\Carbon;
  */
 class PasswordResetCode extends Model
 {
+    use HasOtpCode;
+
     public const MAX_ATTEMPTS = 5;
 
     /**
@@ -42,15 +45,5 @@ class PasswordResetCode extends Model
             'verified_at' => 'datetime',
             'used_at' => 'datetime',
         ];
-    }
-
-    public function isExpired(): bool
-    {
-        return $this->expires_at->isPast();
-    }
-
-    public function hasTooManyAttempts(): bool
-    {
-        return $this->attempts >= self::MAX_ATTEMPTS;
     }
 }
