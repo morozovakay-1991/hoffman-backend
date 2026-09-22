@@ -18,7 +18,8 @@ class MeditationController extends Controller
     public function __construct(
         private readonly AccessLevelService $accessLevelService,
         private readonly MeditationAudioService $meditationAudioService,
-    ) {}
+    ) {
+    }
 
     /**
      * List published meditations.
