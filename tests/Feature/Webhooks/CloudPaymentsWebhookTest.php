@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Webhooks;
 
+use App\Enums\SubscriptionStatus;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -41,7 +42,7 @@ class CloudPaymentsWebhookTest extends TestCase
         $response->assertOk()->assertJson(['code' => 0]);
 
         $subscription->refresh();
-        $this->assertSame('active', $subscription->status);
+        $this->assertSame(SubscriptionStatus::Active, $subscription->status);
         $this->assertSame('cp_sub_123', $subscription->external_subscription_id);
 
         $this->assertDatabaseCount('invoices', 1);
@@ -77,7 +78,7 @@ class CloudPaymentsWebhookTest extends TestCase
         $response = $this->sendCloudPaymentsWebhook($data);
         $response->assertOk()->assertJson(['code' => 0]);
 
-        $this->assertSame('pending', $subscription->refresh()->status);
+        $this->assertSame(SubscriptionStatus::Pending, $subscription->refresh()->status);
         $this->assertDatabaseCount('invoices', 0);
         $this->assertDatabaseCount('payment_webhook_events', 1);
     }
@@ -112,7 +113,7 @@ class CloudPaymentsWebhookTest extends TestCase
             ->assertJsonPath('error.code', 'INVALID_WEBHOOK_SIGNATURE');
 
         $this->assertDatabaseCount('payment_webhook_events', 0);
-        $this->assertSame('pending', $subscription->refresh()->status);
+        $this->assertSame(SubscriptionStatus::Pending, $subscription->refresh()->status);
     }
 
     public function test_a_notification_with_a_foreign_email_does_not_break_the_binding_to_the_correct_subscription(): void
@@ -146,8 +147,8 @@ class CloudPaymentsWebhookTest extends TestCase
         $response = $this->sendCloudPaymentsWebhook($data);
         $response->assertOk()->assertJson(['code' => 0]);
 
-        $this->assertSame('active', $subscription->refresh()->status);
-        $this->assertSame('pending', $otherSubscription->refresh()->status);
+        $this->assertSame(SubscriptionStatus::Active, $subscription->refresh()->status);
+        $this->assertSame(SubscriptionStatus::Pending, $otherSubscription->refresh()->status);
 
         $this->assertDatabaseCount('invoices', 1);
         $this->assertDatabaseHas('invoices', [
@@ -177,7 +178,7 @@ class CloudPaymentsWebhookTest extends TestCase
 
         // The unmatched notification must not touch the user's real pending subscription,
         // nor fabricate a new subscription/invoice to satisfy it.
-        $this->assertSame('pending', $subscription->refresh()->status);
+        $this->assertSame(SubscriptionStatus::Pending, $subscription->refresh()->status);
         $this->assertDatabaseCount('subscriptions', 1);
         $this->assertDatabaseCount('invoices', 0);
 

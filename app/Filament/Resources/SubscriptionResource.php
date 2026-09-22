@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\SubscriptionStatus;
 use App\Filament\Resources\SubscriptionResource\Pages;
 use App\Filament\Resources\SubscriptionResource\RelationManagers;
 use App\Models\Subscription;
@@ -69,8 +70,8 @@ class SubscriptionResource extends Resource
                 TextColumn::make('status')
                     ->label('Статус')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => self::STATUS_LABELS[$state] ?? $state)
-                    ->color(fn (string $state): string => self::STATUS_COLORS[$state] ?? 'gray')
+                    ->formatStateUsing(fn (SubscriptionStatus $state): string => self::STATUS_LABELS[$state->value] ?? $state->value)
+                    ->color(fn (SubscriptionStatus $state): string => self::STATUS_COLORS[$state->value] ?? 'gray')
                     ->sortable(),
                 TextColumn::make('payment_provider')
                     ->label('Провайдер')
@@ -111,8 +112,8 @@ class SubscriptionResource extends Resource
                 TextEntry::make('status')
                     ->label('Статус')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => self::STATUS_LABELS[$state] ?? $state)
-                    ->color(fn (string $state): string => self::STATUS_COLORS[$state] ?? 'gray'),
+                    ->formatStateUsing(fn (SubscriptionStatus $state): string => self::STATUS_LABELS[$state->value] ?? $state->value)
+                    ->color(fn (SubscriptionStatus $state): string => self::STATUS_COLORS[$state->value] ?? 'gray'),
                 TextEntry::make('payment_provider')
                     ->label('Провайдер')
                     ->formatStateUsing(fn (?string $state): string => self::PROVIDER_LABELS[$state] ?? ($state ?? '—'))

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DeletionRequestStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -28,6 +29,7 @@ class DeletionRequest extends Model
     protected function casts(): array
     {
         return [
+            'status' => DeletionRequestStatus::class,
             'scheduled_for' => 'datetime',
             'completed_at' => 'datetime',
         ];

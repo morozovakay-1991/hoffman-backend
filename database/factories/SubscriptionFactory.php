@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\SubscriptionStatus;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -25,7 +26,7 @@ class SubscriptionFactory extends Factory
             'product_id' => fake()->randomElement(['monthly_plan', 'yearly_plan', 'lifetime_plan']),
             'transaction_id' => fake()->unique()->uuid(),
             'original_transaction_id' => fake()->uuid(),
-            'status' => 'active',
+            'status' => SubscriptionStatus::Active,
             'auto_renew' => true,
             'starts_at' => $startsAt,
             'trial_ends_at' => null,
@@ -41,7 +42,7 @@ class SubscriptionFactory extends Factory
     public function expired(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'expired',
+            'status' => SubscriptionStatus::Expired,
             'auto_renew' => false,
             'expires_at' => fake()->dateTimeBetween('-1 year', 'now'),
         ]);
@@ -53,7 +54,7 @@ class SubscriptionFactory extends Factory
     public function cancelled(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'cancelled',
+            'status' => SubscriptionStatus::Cancelled,
             'auto_renew' => false,
             'cancelled_at' => now(),
         ]);
@@ -66,7 +67,7 @@ class SubscriptionFactory extends Factory
     public function inGracePeriod(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'in_grace_period',
+            'status' => SubscriptionStatus::InGracePeriod,
             'expires_at' => fake()->dateTimeBetween('now', '+16 days'),
         ]);
     }

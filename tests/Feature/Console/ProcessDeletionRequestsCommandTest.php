@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Console;
 
+use App\Enums\DeletionRequestStatus;
 use App\Enums\VerificationStatus;
 use App\Models\DiaryDay;
 use App\Models\DiaryEntry;
@@ -58,7 +59,7 @@ class ProcessDeletionRequestsCommandTest extends TestCase
         Artisan::call('app:process-deletion-requests');
 
         $deletionRequest->refresh();
-        $this->assertSame('completed', $deletionRequest->status);
+        $this->assertSame(DeletionRequestStatus::Completed, $deletionRequest->status);
         $this->assertNotNull($deletionRequest->completed_at);
 
         $this->assertDatabaseCount('diary_entries', 0);
@@ -82,7 +83,7 @@ class ProcessDeletionRequestsCommandTest extends TestCase
         Artisan::call('app:process-deletion-requests');
 
         $deletionRequest->refresh();
-        $this->assertSame('pending', $deletionRequest->status);
+        $this->assertSame(DeletionRequestStatus::Pending, $deletionRequest->status);
         $this->assertNull($deletionRequest->completed_at);
 
         $this->assertDatabaseCount('diary_entries', 1);
@@ -104,13 +105,13 @@ class ProcessDeletionRequestsCommandTest extends TestCase
 
         $deletionRequest->refresh();
         $completedAt = $deletionRequest->completed_at;
-        $this->assertSame('completed', $deletionRequest->status);
+        $this->assertSame(DeletionRequestStatus::Completed, $deletionRequest->status);
         $this->assertNotNull($completedAt);
 
         Artisan::call('app:process-deletion-requests');
 
         $deletionRequest->refresh();
-        $this->assertSame('completed', $deletionRequest->status);
+        $this->assertSame(DeletionRequestStatus::Completed, $deletionRequest->status);
         $this->assertTrue($completedAt->equalTo($deletionRequest->completed_at));
     }
 }

@@ -4,6 +4,7 @@ namespace Tests\Feature\Billing;
 
 use App\Domain\Billing\Gateways\CloudPaymentsGateway;
 use App\Domain\Billing\Gateways\StripeGateway;
+use App\Enums\SubscriptionStatus;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -38,7 +39,7 @@ class CancelSubscriptionTest extends TestCase
             ->assertJsonPath('subscription.status', 'cancelled');
 
         $subscription->refresh();
-        $this->assertSame('cancelled', $subscription->status);
+        $this->assertSame(SubscriptionStatus::Cancelled, $subscription->status);
         $this->assertFalse($subscription->auto_renew);
         $this->assertNotNull($subscription->cancelled_at);
     }
@@ -66,7 +67,7 @@ class CancelSubscriptionTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('subscription.status', 'cancelled');
 
-        $this->assertSame('cancelled', $subscription->refresh()->status);
+        $this->assertSame(SubscriptionStatus::Cancelled, $subscription->refresh()->status);
     }
 
     public function test_it_cancels_a_subscription_in_grace_period(): void

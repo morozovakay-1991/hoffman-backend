@@ -6,6 +6,7 @@ use App\Domain\Billing\Contracts\PaymentGatewayInterface;
 use App\Domain\Billing\Exceptions\SubscriptionNotFoundException;
 use App\Domain\Billing\Gateways\CloudPaymentsGateway;
 use App\Domain\Billing\Gateways\StripeGateway;
+use App\Enums\SubscriptionStatus;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Support\Facades\App;
@@ -32,7 +33,7 @@ class BillingService
     public function latestSubscriptionFor(User $user): Subscription
     {
         return $user->subscriptions()->latest('id')->first()
-            ?? new Subscription(['status' => 'none', 'auto_renew' => false]);
+            ?? new Subscription(['status' => SubscriptionStatus::None, 'auto_renew' => false]);
     }
 
     /**
@@ -63,7 +64,7 @@ class BillingService
             'provider' => 'stripe',
             'payment_provider' => $this->providerName($gateway),
             'product_id' => $plan,
-            'status' => 'pending',
+            'status' => SubscriptionStatus::Pending,
             'auto_renew' => true,
             'currency' => strtoupper($currency),
             'country' => strtoupper($country),
@@ -87,7 +88,7 @@ class BillingService
         $gateway->cancelSubscription($subscription);
 
         $subscription->update([
-            'status' => 'cancelled',
+            'status' => SubscriptionStatus::Cancelled,
             'auto_renew' => false,
             'cancelled_at' => now(),
             'cancel_at' => $subscription->expires_at ?? now(),

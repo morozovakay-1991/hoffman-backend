@@ -2,6 +2,7 @@
 
 namespace App\Domain\Profile\Services;
 
+use App\Enums\DeletionRequestStatus;
 use App\Models\DeletionRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +28,7 @@ class AccountDeletionService
             }
 
             $deletionRequest->forceFill([
-                'status' => 'completed',
+                'status' => DeletionRequestStatus::Completed,
                 'completed_at' => now(),
             ])->save();
         });

@@ -4,6 +4,7 @@ namespace App\Domain\Profile\Services;
 
 use App\Domain\Profile\Exceptions\DeletionAlreadyRequestedException;
 use App\Domain\Profile\Exceptions\InvalidOldPasswordException;
+use App\Enums\DeletionRequestStatus;
 use App\Models\DeletionRequest;
 use App\Models\NotificationSetting;
 use App\Models\User;
@@ -69,7 +70,7 @@ class ProfileService
      */
     public function requestDeletion(User $user, ?string $reason): DeletionRequest
     {
-        $hasPendingRequest = $user->deletionRequests()->where('status', 'pending')->exists();
+        $hasPendingRequest = $user->deletionRequests()->where('status', DeletionRequestStatus::Pending)->exists();
 
         if ($hasPendingRequest) {
             throw new DeletionAlreadyRequestedException();
@@ -81,7 +82,7 @@ class ProfileService
         // exception instead of creating a duplicate pending request.
         try {
             return $user->deletionRequests()->create([
-                'status' => 'pending',
+                'status' => DeletionRequestStatus::Pending,
                 'reason' => $reason,
                 'scheduled_for' => now()->addDays(self::DELETION_GRACE_PERIOD_DAYS),
             ]);
@@ -101,7 +102,7 @@ class ProfileService
     public function deleteNow(User $user): void
     {
         DB::transaction(function () use ($user) {
-            $user->deletionRequests()->where('status', 'pending')->update(['status' => 'cancelled']);
+            $user->deletionRequests()->where('status', DeletionRequestStatus::Pending)->update(['status' => DeletionRequestStatus::Cancelled]);
             $this->accountDeletionService->purgePersonalData($user);
             $user->delete();
         });

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Domain\Profile\Services\AccountDeletionService;
+use App\Enums\DeletionRequestStatus;
 use App\Models\DeletionRequest;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -31,7 +32,7 @@ class ProcessDeletionRequestsCommand extends Command
         $failed = 0;
 
         DeletionRequest::query()
-            ->where('status', 'pending')
+            ->where('status', DeletionRequestStatus::Pending)
             ->where('scheduled_for', '<=', now())
             ->orderBy('id')
             ->chunkById(100, function ($deletionRequests) use (&$processed, &$failed) {
