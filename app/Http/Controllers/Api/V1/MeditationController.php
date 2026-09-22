@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Content\Services\AccessLevelService;
+use App\Domain\Content\Services\MeditationAudioService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MeditationResource;
 use App\Models\Meditation;
@@ -10,13 +11,14 @@ use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Storage;
 
 #[Group(name: 'Meditations', description: 'Guided meditation catalogue. Public — access to each item is subscription-gated per request, not by authentication, so both guests and logged-in users may call these.')]
 class MeditationController extends Controller
 {
-    public function __construct(private readonly AccessLevelService $accessLevelService)
-    {
+    public function __construct(
+        private readonly AccessLevelService $accessLevelService,
+        private readonly MeditationAudioService $meditationAudioService,
+    ) {
     }
 
     /**
@@ -90,13 +92,12 @@ class MeditationController extends Controller
 
         $this->accessLevelService->assertCanAccess($user, AccessLevelService::CONTENT_MEDITATION, $meditation);
 
-        $expiresAt = now()->addHour();
-        $url = Storage::disk('s3')->temporaryUrl($meditation->audio_path, $expiresAt);
+        $audio = $this->meditationAudioService->presignedUrl($meditation);
 
         return response()->json([
             'data' => [
-                'url' => $url,
-                'expires_at' => $expiresAt->toIso8601String(),
+                'url' => $audio['url'],
+                'expires_at' => $audio['expires_at']->toIso8601String(),
             ],
         ]);
     }
