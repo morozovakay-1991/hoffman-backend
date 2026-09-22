@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Content\Services\AccessLevelService;
+use App\Domain\Content\Services\ContentCatalogService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TopicResource;
 use App\Models\Topic;
@@ -13,8 +14,10 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 #[Group(name: 'Topics', description: 'Content topics (categories grouping meditations and tools). Public — access to each item is subscription-gated per request, not by authentication, so both guests and logged-in users may call these.')]
 class TopicController extends Controller
 {
-    public function __construct(private readonly AccessLevelService $accessLevelService)
-    {
+    public function __construct(
+        private readonly AccessLevelService $accessLevelService,
+        private readonly ContentCatalogService $contentCatalogService,
+    ) {
     }
 
     /**
@@ -28,19 +31,12 @@ class TopicController extends Controller
     {
         $user = $request->user('sanctum');
 
-        $topics = Topic::query()
-            ->where('is_published', true)
-            ->with(['meditations', 'tools'])
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
-
-        $topics->each(function (Topic $topic) use ($user) {
-            $topic->setAttribute(
-                'is_locked',
-                !$this->accessLevelService->canAccess($user, AccessLevelService::CONTENT_TOPIC, $topic),
-            );
-        });
+        $topics = $this->contentCatalogService->listPublishedWithLockFlag(
+            Topic::class,
+            AccessLevelService::CONTENT_TOPIC,
+            $user,
+            ['meditations', 'tools'],
+        );
 
         return TopicResource::collection($topics);
     }

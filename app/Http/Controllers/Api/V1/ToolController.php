@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Content\Services\AccessLevelService;
+use App\Domain\Content\Services\ContentCatalogService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ToolResource;
 use App\Models\Tool;
@@ -13,8 +14,10 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 #[Group(name: 'Tools', description: 'Practice tools catalogue. Public — access to each item is subscription-gated per request, not by authentication, so both guests and logged-in users may call these.')]
 class ToolController extends Controller
 {
-    public function __construct(private readonly AccessLevelService $accessLevelService)
-    {
+    public function __construct(
+        private readonly AccessLevelService $accessLevelService,
+        private readonly ContentCatalogService $contentCatalogService,
+    ) {
     }
 
     /**
@@ -28,19 +31,12 @@ class ToolController extends Controller
     {
         $user = $request->user('sanctum');
 
-        $tools = Tool::query()
-            ->where('is_published', true)
-            ->with('topics')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
-
-        $tools->each(function (Tool $tool) use ($user) {
-            $tool->setAttribute(
-                'is_locked',
-                !$this->accessLevelService->canAccess($user, AccessLevelService::CONTENT_TOOL, $tool),
-            );
-        });
+        $tools = $this->contentCatalogService->listPublishedWithLockFlag(
+            Tool::class,
+            AccessLevelService::CONTENT_TOOL,
+            $user,
+            ['topics'],
+        );
 
         return ToolResource::collection($tools);
     }

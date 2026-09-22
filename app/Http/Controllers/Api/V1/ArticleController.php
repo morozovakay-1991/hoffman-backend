@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Content\Services\AccessLevelService;
+use App\Domain\Content\Services\ContentCatalogService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ArticleResource;
 use App\Models\Article;
@@ -13,8 +14,10 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 #[Group(name: 'Articles', description: 'Article catalogue. Public — articles are always accessible regardless of subscription, so both guests and logged-in users may call these.')]
 class ArticleController extends Controller
 {
-    public function __construct(private readonly AccessLevelService $accessLevelService)
-    {
+    public function __construct(
+        private readonly AccessLevelService $accessLevelService,
+        private readonly ContentCatalogService $contentCatalogService,
+    ) {
     }
 
     /**
@@ -26,10 +29,7 @@ class ArticleController extends Controller
      */
     public function index(): AnonymousResourceCollection
     {
-        $articles = Article::query()
-            ->where('is_published', true)
-            ->orderBy('id')
-            ->get();
+        $articles = $this->contentCatalogService->listPublished(Article::class);
 
         return ArticleResource::collection($articles);
     }
