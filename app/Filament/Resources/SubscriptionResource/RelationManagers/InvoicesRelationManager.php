@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SubscriptionResource\RelationManagers;
 
+use App\Enums\InvoiceStatus;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -32,7 +33,8 @@ class InvoicesRelationManager extends RelationManager
                     ->placeholder('—'),
                 TextColumn::make('status')
                     ->label('Статус')
-                    ->badge(),
+                    ->badge()
+                    ->formatStateUsing(fn (InvoiceStatus $state): string => $state->value),
                 TextColumn::make('paid_at')
                     ->label('Оплачен')
                     ->dateTime('d.m.Y H:i')

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Webhooks;
 
+use App\Enums\SubscriptionStatus;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -42,7 +43,7 @@ class StripeWebhookTest extends TestCase
         $response->assertOk()->assertJson(['status' => 'ok']);
 
         $subscription->refresh();
-        $this->assertSame('active', $subscription->status);
+        $this->assertSame(SubscriptionStatus::Active, $subscription->status);
         $this->assertSame('sub_test_123', $subscription->external_subscription_id);
 
         $this->assertDatabaseCount('invoices', 1);
@@ -92,7 +93,7 @@ class StripeWebhookTest extends TestCase
             ->assertJsonPath('error.code', 'INVALID_WEBHOOK_SIGNATURE');
 
         $this->assertDatabaseCount('payment_webhook_events', 0);
-        $this->assertSame('pending', $subscription->refresh()->status);
+        $this->assertSame(SubscriptionStatus::Pending, $subscription->refresh()->status);
     }
 
     private function checkoutCompletedPayload(string $eventId, string $customerId, string $subscriptionId): string

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\InvoiceStatus;
 use Database\Factories\InvoiceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,6 +36,7 @@ class Invoice extends Model
     protected function casts(): array
     {
         return [
+            'status' => InvoiceStatus::class,
             'paid_at' => 'datetime',
             'metadata' => 'array',
         ];

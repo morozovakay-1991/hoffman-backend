@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\InvoiceStatus;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -25,7 +26,7 @@ class InvoiceFactory extends Factory
             'external_invoice_id' => fake()->uuid(),
             'amount' => fake()->numberBetween(500, 5000),
             'currency' => fake()->randomElement(['USD', 'RUB']),
-            'status' => 'paid',
+            'status' => InvoiceStatus::Paid,
             'paid_at' => now(),
             'metadata' => [],
         ];

@@ -4,6 +4,8 @@ namespace App\Domain\Billing\Services;
 
 use App\Domain\Billing\Exceptions\InvalidWebhookSignatureException;
 use App\Domain\Billing\Support\PlanCatalog;
+use App\Enums\InvoiceStatus;
+use App\Enums\SubscriptionStatus;
 use App\Models\Invoice;
 use App\Models\PaymentWebhookEvent;
 use App\Models\Subscription;
@@ -97,7 +99,7 @@ class WebhookService
         }
 
         $subscription->update([
-            'status' => 'active',
+            'status' => SubscriptionStatus::Active,
             'external_subscription_id' => $object['subscription'] ?? $subscription->external_subscription_id,
             'external_customer_id' => $object['customer'] ?? $subscription->external_customer_id,
             'starts_at' => $subscription->starts_at ?? now(),
@@ -122,7 +124,7 @@ class WebhookService
         }
 
         $subscription->update([
-            'status' => 'active',
+            'status' => SubscriptionStatus::Active,
             'expires_at' => $this->expiresAtForPlan($subscription->product_id) ?? $subscription->expires_at,
         ]);
 
@@ -144,7 +146,7 @@ class WebhookService
         }
 
         $subscription->update([
-            'status' => 'cancelled',
+            'status' => SubscriptionStatus::Cancelled,
             'auto_renew' => false,
             'cancelled_at' => now(),
         ]);
@@ -170,7 +172,7 @@ class WebhookService
         }
 
         $subscription->update([
-            'status' => 'active',
+            'status' => SubscriptionStatus::Active,
             'external_subscription_id' => $data['SubscriptionId'] ?? $subscription->external_subscription_id,
             'starts_at' => $subscription->starts_at ?? now(),
             'expires_at' => $this->expiresAtForPlan($subscription->product_id) ?? $subscription->expires_at,
@@ -281,7 +283,7 @@ class WebhookService
                 'external_invoice_id' => $externalInvoiceId,
                 'amount' => $amount,
                 'currency' => $currency,
-                'status' => 'paid',
+                'status' => InvoiceStatus::Paid,
                 'paid_at' => now(),
             ]);
         } catch (UniqueConstraintViolationException $e) {

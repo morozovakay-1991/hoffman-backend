@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SubscriptionStatus;
 use Database\Factories\SubscriptionFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,9 +21,13 @@ class Subscription extends Model
      * ("trialing"), or a billing retry window after a failed renewal
      * ("in_grace_period"), during which access is not yet revoked.
      *
-     * @var list<string>
+     * @var list<SubscriptionStatus>
      */
-    public const ACTIVE_STATUSES = ['active', 'trialing', 'in_grace_period'];
+    public const ACTIVE_STATUSES = [
+        SubscriptionStatus::Active,
+        SubscriptionStatus::Trialing,
+        SubscriptionStatus::InGracePeriod,
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -58,6 +63,7 @@ class Subscription extends Model
     protected function casts(): array
     {
         return [
+            'status' => SubscriptionStatus::class,
             'auto_renew' => 'boolean',
             'starts_at' => 'datetime',
             'trial_ends_at' => 'datetime',
