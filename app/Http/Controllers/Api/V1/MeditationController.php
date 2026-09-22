@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Content\Services\AccessLevelService;
+use App\Domain\Content\Services\ContentCatalogService;
 use App\Domain\Content\Services\MeditationAudioService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MeditationResource;
@@ -18,6 +19,7 @@ class MeditationController extends Controller
     public function __construct(
         private readonly AccessLevelService $accessLevelService,
         private readonly MeditationAudioService $meditationAudioService,
+        private readonly ContentCatalogService $contentCatalogService,
     ) {
     }
 
@@ -35,19 +37,12 @@ class MeditationController extends Controller
     {
         $user = $request->user('sanctum');
 
-        $meditations = Meditation::query()
-            ->where('is_published', true)
-            ->with('topics')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
-
-        $meditations->each(function (Meditation $meditation) use ($user) {
-            $meditation->setAttribute(
-                'is_locked',
-                ! $this->accessLevelService->canAccess($user, AccessLevelService::CONTENT_MEDITATION, $meditation),
-            );
-        });
+        $meditations = $this->contentCatalogService->listPublishedWithLockFlag(
+            Meditation::class,
+            AccessLevelService::CONTENT_MEDITATION,
+            $user,
+            ['topics'],
+        );
 
         return MeditationResource::collection($meditations);
     }
