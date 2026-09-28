@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Domain\Content\Services\CoverImageService;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -22,6 +23,7 @@ class ArticleResource extends JsonResource
             'short_description' => $this->short_description,
             'full_description' => $this->full_description,
             'cover_image_path' => $this->cover_image_path,
+            'cover_image_url' => app(CoverImageService::class)->url($this->cover_image_path),
             'published_at' => $this->published_at,
             'is_new' => $this->is_new,
             // Articles are always accessible regardless of subscription state (see AccessLevelService),

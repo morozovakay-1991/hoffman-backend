@@ -23,6 +23,7 @@ class Topic extends Model
         'title',
         'subtitle',
         'full_description',
+        'cover_image_path',
         'is_published',
         'sort_order',
     ];

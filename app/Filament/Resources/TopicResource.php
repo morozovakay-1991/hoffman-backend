@@ -7,6 +7,7 @@ use App\Models\Meditation;
 use App\Models\Tool;
 use App\Models\Topic;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -51,6 +52,11 @@ class TopicResource extends Resource
                     ->label('Полное описание')
                     ->required()
                     ->columnSpanFull(),
+                FileUpload::make('cover_image_path')
+                    ->label('Обложка')
+                    ->disk('s3')
+                    ->directory('topics')
+                    ->image(),
                 Toggle::make('is_published')
                     ->label('Опубликована'),
                 TextInput::make('sort_order')

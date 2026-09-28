@@ -34,4 +34,14 @@ class ToolFactory extends Factory
             'is_published' => false,
         ]);
     }
+
+    /**
+     * Indicate that the tool has a cover image.
+     */
+    public function withCover(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'cover_image_path' => 'tools/'.fake()->uuid().'.jpg',
+        ]);
+    }
 }

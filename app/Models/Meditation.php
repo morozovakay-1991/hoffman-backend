@@ -23,6 +23,7 @@ class Meditation extends Model
         'title',
         'short_description',
         'full_description',
+        'cover_image_path',
         'audio_path',
         'duration_seconds',
         'is_free',

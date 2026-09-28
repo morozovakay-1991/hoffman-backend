@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Domain\Content\Services\CoverImageService;
 use App\Models\Topic;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -25,6 +26,7 @@ class TopicResource extends JsonResource
             'title' => $this->title,
             'subtitle' => $this->subtitle,
             'full_description' => $isLocked ? null : $this->full_description,
+            'cover_image_url' => app(CoverImageService::class)->url($this->cover_image_path),
             'is_locked' => $isLocked,
             'meditation_ids' => $this->whenLoaded('meditations', fn () => $this->meditations->pluck('id')),
             'tool_ids' => $this->whenLoaded('tools', fn () => $this->tools->pluck('id')),

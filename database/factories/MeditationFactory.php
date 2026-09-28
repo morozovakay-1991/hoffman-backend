@@ -47,4 +47,14 @@ class MeditationFactory extends Factory
             'is_published' => false,
         ]);
     }
+
+    /**
+     * Indicate that the meditation has a cover image.
+     */
+    public function withCover(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'cover_image_path' => 'meditations/covers/'.fake()->uuid().'.jpg',
+        ]);
+    }
 }

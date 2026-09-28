@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ToolResource\Pages;
 use App\Models\Tool;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -49,6 +50,11 @@ class ToolResource extends Resource
                     ->label('Полное описание')
                     ->required()
                     ->columnSpanFull(),
+                FileUpload::make('cover_image_path')
+                    ->label('Обложка')
+                    ->disk('s3')
+                    ->directory('tools')
+                    ->image(),
                 Toggle::make('is_published')
                     ->label('Опубликован'),
                 TextInput::make('sort_order')

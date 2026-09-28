@@ -34,4 +34,14 @@ class TopicFactory extends Factory
             'is_published' => false,
         ]);
     }
+
+    /**
+     * Indicate that the topic has a cover image.
+     */
+    public function withCover(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'cover_image_path' => 'topics/'.fake()->uuid().'.jpg',
+        ]);
+    }
 }

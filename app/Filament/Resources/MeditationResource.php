@@ -48,6 +48,11 @@ class MeditationResource extends Resource
                     ->label('Полное описание')
                     ->required()
                     ->columnSpanFull(),
+                FileUpload::make('cover_image_path')
+                    ->label('Обложка')
+                    ->disk('s3')
+                    ->directory('meditations/covers')
+                    ->image(),
                 FileUpload::make('audio_path')
                     ->label('Аудиофайл')
                     ->disk('s3')

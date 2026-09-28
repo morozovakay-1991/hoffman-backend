@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Domain\Content\Services\CoverImageService;
 use App\Models\Meditation;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -25,6 +26,7 @@ class MeditationResource extends JsonResource
             'title' => $this->title,
             'short_description' => $this->short_description,
             'full_description' => $isLocked ? null : $this->full_description,
+            'cover_image_url' => app(CoverImageService::class)->url($this->cover_image_path),
             'audio_path' => $isLocked ? null : $this->audio_path,
             'duration_seconds' => $this->duration_seconds,
             'is_free' => $this->is_free,
