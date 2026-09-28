@@ -50,6 +50,46 @@ services:
       timeout: 5s
       retries: 5
 
+  # One-off: creates the bucket and grants anonymous read access to content
+  # covers only (meditation audio under meditations/ stays private).
+  # Uses the minio/minio image, which already ships the mc client.
+  minio-init:
+    image: minio/minio
+    container_name: hoffman-minio-init
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET: ${AWS_BUCKET:-hoffman}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"
+        mc mb --ignore-existing "local/$$MINIO_BUCKET"
+        cat > /tmp/covers-policy.json <<EOF
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {"AWS": ["*"]},
+              "Action": ["s3:GetObject"],
+              "Resource": [
+                "arn:aws:s3:::$$MINIO_BUCKET/articles/*",
+                "arn:aws:s3:::$$MINIO_BUCKET/tools/*",
+                "arn:aws:s3:::$$MINIO_BUCKET/topics/*",
+                "arn:aws:s3:::$$MINIO_BUCKET/meditations/covers/*"
+              ]
+            }
+          ]
+        }
+        EOF
+        mc anonymous set-json /tmp/covers-policy.json "local/$$MINIO_BUCKET"
+
   mailhog:
     image: mailhog/mailhog
     container_name: hoffman-mailhog

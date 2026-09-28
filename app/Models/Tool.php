@@ -23,6 +23,7 @@ class Tool extends Model
         'title',
         'short_description',
         'full_description',
+        'cover_image_path',
         'is_published',
         'sort_order',
         'stage_tag',

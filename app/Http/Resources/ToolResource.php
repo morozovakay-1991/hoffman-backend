@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Domain\Content\Services\CoverImageService;
 use App\Models\Tool;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -25,6 +26,7 @@ class ToolResource extends JsonResource
             'title' => $this->title,
             'short_description' => $this->short_description,
             'full_description' => $isLocked ? null : $this->full_description,
+            'cover_image_url' => app(CoverImageService::class)->url($this->cover_image_path),
             'is_locked' => $isLocked,
             'stage_tag' => $this->stage_tag,
             'topic_ids' => $this->whenLoaded('topics', fn () => $this->topics->pluck('id')),

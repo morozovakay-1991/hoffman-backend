@@ -7,6 +7,8 @@ use App\Filament\Resources\ArticleResource\Pages\ListArticles;
 use App\Models\Article;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -68,5 +70,25 @@ class ArticleResourceTest extends TestCase
             ->assertHasNoFormErrors();
 
         $this->assertFalse($article->refresh()->is_new);
+    }
+
+    public function test_an_admin_can_upload_a_cover_image(): void
+    {
+        Storage::fake('s3');
+        $admin = User::factory()->admin()->create();
+        $article = Article::factory()->create(['cover_image_path' => null]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditArticle::class, ['record' => $article->getRouteKey()])
+            ->fillForm(['cover_image_path' => UploadedFile::fake()->image('cover.jpg')])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $path = $article->refresh()->cover_image_path;
+
+        $this->assertNotNull($path);
+        $this->assertStringStartsWith('articles/', $path);
+        Storage::disk('s3')->assertExists($path);
     }
 }

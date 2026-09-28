@@ -9,6 +9,8 @@ use App\Models\Tool;
 use App\Models\Topic;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -98,5 +100,48 @@ class TopicResourceTest extends TestCase
             ->call('reorderTable', [$second->id, $first->id]);
 
         $this->assertTrue($second->refresh()->sort_order < $first->refresh()->sort_order);
+    }
+
+    public function test_an_admin_can_upload_a_cover_image(): void
+    {
+        Storage::fake('s3');
+        $admin = User::factory()->admin()->create();
+        $topic = Topic::factory()->create();
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditTopic::class, ['record' => $topic->getRouteKey()])
+            ->fillForm(['cover_image_path' => UploadedFile::fake()->image('cover.jpg')])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $path = $topic->refresh()->cover_image_path;
+
+        $this->assertNotNull($path);
+        $this->assertStringStartsWith('topics/', $path);
+        Storage::disk('s3')->assertExists($path);
+    }
+
+    public function test_an_admin_can_replace_the_cover_image(): void
+    {
+        Storage::fake('s3');
+        $admin = User::factory()->admin()->create();
+        $topic = Topic::factory()->create(['cover_image_path' => 'topics/old-cover.jpg']);
+        Storage::disk('s3')->put('topics/old-cover.jpg', 'old-cover-content');
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditTopic::class, ['record' => $topic->getRouteKey()])
+            // As in the UI: remove the current cover first, then upload a new one.
+            ->fillForm(['cover_image_path' => []])
+            ->fillForm(['cover_image_path' => UploadedFile::fake()->image('new-cover.jpg')])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $path = $topic->refresh()->cover_image_path;
+
+        $this->assertNotSame('topics/old-cover.jpg', $path);
+        $this->assertStringStartsWith('topics/', $path);
+        Storage::disk('s3')->assertExists($path);
     }
 }

@@ -30,16 +30,16 @@ class HomeTest extends TestCase
         $response->assertOk()->assertJsonStructure([
             'data' => [
                 'meditations' => [
-                    '*' => ['id', 'title', 'short_description', 'is_locked'],
+                    '*' => ['id', 'title', 'short_description', 'cover_image_url', 'is_locked'],
                 ],
                 'tools' => [
-                    '*' => ['id', 'title', 'short_description', 'is_locked'],
+                    '*' => ['id', 'title', 'short_description', 'cover_image_url', 'is_locked'],
                 ],
                 'topics' => [
-                    '*' => ['id', 'title', 'subtitle', 'is_locked'],
+                    '*' => ['id', 'title', 'subtitle', 'cover_image_url', 'is_locked'],
                 ],
                 'articles' => [
-                    '*' => ['id', 'title', 'short_description', 'is_locked'],
+                    '*' => ['id', 'title', 'short_description', 'cover_image_url', 'is_locked'],
                 ],
                 'diary_progress' => ['current_day', 'total_days', 'is_available'],
             ],

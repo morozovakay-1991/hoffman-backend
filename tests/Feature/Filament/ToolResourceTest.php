@@ -7,6 +7,8 @@ use App\Filament\Resources\ToolResource\Pages\ListTools;
 use App\Models\Tool;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -105,5 +107,48 @@ class ToolResourceTest extends TestCase
             ->filterTable('stage_tag', ['stage_tag' => 'stage-1'])
             ->assertCanSeeTableRecords([$breathing])
             ->assertCanNotSeeTableRecords([$journaling]);
+    }
+
+    public function test_an_admin_can_upload_a_cover_image(): void
+    {
+        Storage::fake('s3');
+        $admin = User::factory()->admin()->create();
+        $tool = Tool::factory()->create();
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditTool::class, ['record' => $tool->getRouteKey()])
+            ->fillForm(['cover_image_path' => UploadedFile::fake()->image('cover.jpg')])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $path = $tool->refresh()->cover_image_path;
+
+        $this->assertNotNull($path);
+        $this->assertStringStartsWith('tools/', $path);
+        Storage::disk('s3')->assertExists($path);
+    }
+
+    public function test_an_admin_can_replace_the_cover_image(): void
+    {
+        Storage::fake('s3');
+        $admin = User::factory()->admin()->create();
+        $tool = Tool::factory()->create(['cover_image_path' => 'tools/old-cover.jpg']);
+        Storage::disk('s3')->put('tools/old-cover.jpg', 'old-cover-content');
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditTool::class, ['record' => $tool->getRouteKey()])
+            // As in the UI: remove the current cover first, then upload a new one.
+            ->fillForm(['cover_image_path' => []])
+            ->fillForm(['cover_image_path' => UploadedFile::fake()->image('new-cover.jpg')])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $path = $tool->refresh()->cover_image_path;
+
+        $this->assertNotSame('tools/old-cover.jpg', $path);
+        $this->assertStringStartsWith('tools/', $path);
+        Storage::disk('s3')->assertExists($path);
     }
 }
