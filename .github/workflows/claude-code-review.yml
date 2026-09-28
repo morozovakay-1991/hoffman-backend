@@ -39,7 +39,18 @@ jobs:
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
           prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
-          claude_args: '--allowedTools "mcp__github_inline_comment__create_inline_comment"'
+          # Prints the full session (tool calls, permission denials) to the
+          # job log; the execution JSON on the runner does not survive the job.
+          show_full_output: true
+          # Permissions match a whole Bash command: a redirect, pipe or chained
+          # command needs approval, which nobody can give in CI, so it is
+          # silently denied. The appended system prompt tells the reviewer to
+          # run gh commands bare, and to keep subagents in the foreground: the
+          # session ends with the job, so a background agent's result never
+          # arrives and the review is never posted. Same setup as hoffman-mobile.
+          claude_args: >-
+            --allowedTools "Bash(gh issue view:*)" "Bash(gh search:*)" "Bash(gh issue list:*)" "Bash(gh pr comment:*)" "Bash(gh pr diff:*)" "Bash(gh pr view:*)" "Bash(gh pr list:*)" "Bash(gh api:*)" "Skill" "Task" "mcp__github_inline_comment__create_inline_comment"
+            --append-system-prompt "When fetching the PR diff or any PR data with gh, run each gh command on its own as a single bare command. Redirects (>), pipes (|) and chained commands (; or &&) are forbidden: in CI they are silently blocked. Read the output directly instead of saving it to a file or filtering it. Never run subagents in the background: launch every Agent/Task call in the foreground (run_in_background false) and wait for its result synchronously in this same session before continuing. Do not use ScheduleWakeup or wait for notifications: when this session ends, the CI job ends and nothing will resume it."
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
 
