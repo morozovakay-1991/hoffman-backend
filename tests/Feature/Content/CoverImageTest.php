@@ -36,11 +36,11 @@ class CoverImageTest extends TestCase
         $response = $this->actingAsApiUser($user)->getJson('/api/v1/home');
 
         $response->assertOk()
-            ->assertJsonPath('data.meditations.0.cover_image_url', 'https://minio.local/hoffman/meditations/covers/morning.jpg')
-            ->assertJsonPath('data.tools.0.cover_image_url', 'https://minio.local/hoffman/tools/anger.jpg')
-            ->assertJsonPath('data.topics.0.cover_image_url', 'https://minio.local/hoffman/topics/boundaries.jpg')
-            ->assertJsonPath('data.articles.0.cover_image_url', 'https://minio.local/hoffman/articles/hoffman.jpg')
-            ->assertJsonPath('data.articles.0.cover_image_path', 'articles/hoffman.jpg');
+            ->assertJsonPath('data.meditations.items.0.cover_image_url', 'https://minio.local/hoffman/meditations/covers/morning.jpg')
+            ->assertJsonPath('data.tools.items.0.cover_image_url', 'https://minio.local/hoffman/tools/anger.jpg')
+            ->assertJsonPath('data.topics.items.0.cover_image_url', 'https://minio.local/hoffman/topics/boundaries.jpg')
+            ->assertJsonPath('data.articles.items.0.cover_image_url', 'https://minio.local/hoffman/articles/hoffman.jpg')
+            ->assertJsonPath('data.articles.items.0.cover_image_path', 'articles/hoffman.jpg');
     }
 
     public function test_cover_url_is_null_when_content_has_no_cover(): void
@@ -54,10 +54,10 @@ class CoverImageTest extends TestCase
         $response = $this->actingAsApiUser($user)->getJson('/api/v1/home');
 
         $response->assertOk()
-            ->assertJsonPath('data.meditations.0.cover_image_url', null)
-            ->assertJsonPath('data.tools.0.cover_image_url', null)
-            ->assertJsonPath('data.topics.0.cover_image_url', null)
-            ->assertJsonPath('data.articles.0.cover_image_url', null);
+            ->assertJsonPath('data.meditations.items.0.cover_image_url', null)
+            ->assertJsonPath('data.tools.items.0.cover_image_url', null)
+            ->assertJsonPath('data.topics.items.0.cover_image_url', null)
+            ->assertJsonPath('data.articles.items.0.cover_image_url', null);
     }
 
     public function test_detail_endpoints_return_the_cover_url(): void
@@ -105,18 +105,18 @@ class CoverImageTest extends TestCase
 
         $this->getJson('/api/v1/meditations')
             ->assertOk()
-            ->assertJsonPath('data.0.is_locked', true)
-            ->assertJsonPath('data.0.cover_image_url', 'https://minio.local/hoffman/meditations/covers/paid.jpg');
+            ->assertJsonPath('data.items.0.is_locked', true)
+            ->assertJsonPath('data.items.0.cover_image_url', 'https://minio.local/hoffman/meditations/covers/paid.jpg');
 
         $this->getJson('/api/v1/tools')
             ->assertOk()
-            ->assertJsonPath('data.0.is_locked', true)
-            ->assertJsonPath('data.0.cover_image_url', 'https://minio.local/hoffman/tools/anger.jpg');
+            ->assertJsonPath('data.items.0.is_locked', true)
+            ->assertJsonPath('data.items.0.cover_image_url', 'https://minio.local/hoffman/tools/anger.jpg');
 
         $this->getJson('/api/v1/topics')
             ->assertOk()
-            ->assertJsonPath('data.0.is_locked', true)
-            ->assertJsonPath('data.0.cover_image_url', 'https://minio.local/hoffman/topics/boundaries.jpg');
+            ->assertJsonPath('data.items.0.is_locked', true)
+            ->assertJsonPath('data.items.0.cover_image_url', 'https://minio.local/hoffman/topics/boundaries.jpg');
     }
 
     private function subscribedUser(): User

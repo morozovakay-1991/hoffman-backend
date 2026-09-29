@@ -20,8 +20,13 @@ class HomeController extends Controller
     }
 
     /**
-     * Aggregate a handful of accessible items per content type, plus the
-     * user's practice diary progress, for the app's home screen.
+     * Aggregate, per content type, the featured item (`featured`, or null if
+     * none is assigned) and up to 3 other accessible items (`items`, never
+     * repeating the featured one), plus the user's practice diary progress,
+     * for the app's home screen.
+     *
+     * An inaccessible featured item is still returned, flagged `is_locked`
+     * (as in the catalogue lists), while `items` only contains accessible ones.
      *
      * Like the content catalogue endpoints, this accepts both guest and
      * authenticated requests: access to each item is decided per-request by
@@ -34,10 +39,22 @@ class HomeController extends Controller
 
         return response()->json([
             'data' => [
-                'meditations' => MeditationResource::collection($summary['meditations']),
-                'tools' => ToolResource::collection($summary['tools']),
-                'topics' => TopicResource::collection($summary['topics']),
-                'articles' => ArticleResource::collection($summary['articles']),
+                'meditations' => [
+                    'featured' => $summary['meditations']['featured'] ? new MeditationResource($summary['meditations']['featured']) : null,
+                    'items' => MeditationResource::collection($summary['meditations']['items']),
+                ],
+                'tools' => [
+                    'featured' => $summary['tools']['featured'] ? new ToolResource($summary['tools']['featured']) : null,
+                    'items' => ToolResource::collection($summary['tools']['items']),
+                ],
+                'topics' => [
+                    'featured' => $summary['topics']['featured'] ? new TopicResource($summary['topics']['featured']) : null,
+                    'items' => TopicResource::collection($summary['topics']['items']),
+                ],
+                'articles' => [
+                    'featured' => $summary['articles']['featured'] ? new ArticleResource($summary['articles']['featured']) : null,
+                    'items' => ArticleResource::collection($summary['articles']['items']),
+                ],
                 'diary_progress' => $summary['diary_progress'],
             ],
         ]);

@@ -21,7 +21,7 @@ class ToolAccessTest extends TestCase
 
         $response->assertOk();
 
-        $items = collect($response->json('data'))->keyBy('id');
+        $items = collect($response->json('data.items'))->keyBy('id');
         $this->assertTrue($items[$tool->id]['is_locked']);
         $this->assertNull($items[$tool->id]['full_description']);
         $this->assertSame('stage-1', $items[$tool->id]['stage_tag']);
@@ -89,7 +89,7 @@ class ToolAccessTest extends TestCase
 
         $this->assertSame(
             [$first->id, $second->id, $third->id],
-            collect($response->json('data'))->pluck('id')->all(),
+            collect($response->json('data.items'))->pluck('id')->all(),
         );
     }
 

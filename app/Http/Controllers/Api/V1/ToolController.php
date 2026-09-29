@@ -8,8 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ToolResource;
 use App\Models\Tool;
 use Dedoc\Scramble\Attributes\Group;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 #[Group(name: 'Tools', description: 'Practice tools catalogue. Public — access to each item is subscription-gated per request, not by authentication, so both guests and logged-in users may call these.')]
 class ToolController extends Controller
@@ -25,11 +25,18 @@ class ToolController extends Controller
      *
      * See App\Http\Controllers\Api\V1\MeditationController::index() for the
      * locked-but-visible access decision applied here (is_locked flag instead of
-     * hiding inaccessible records).
+     * hiding inaccessible records), and for the `featured` / `items` split.
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
         $user = $request->user('sanctum');
+
+        $featured = $this->contentCatalogService->getFeatured(
+            Tool::class,
+            AccessLevelService::CONTENT_TOOL,
+            $user,
+            ['topics'],
+        );
 
         $tools = $this->contentCatalogService->listPublishedWithLockFlag(
             Tool::class,
@@ -38,7 +45,12 @@ class ToolController extends Controller
             ['topics'],
         );
 
-        return ToolResource::collection($tools);
+        return response()->json([
+            'data' => [
+                'featured' => $featured ? new ToolResource($featured) : null,
+                'items' => ToolResource::collection($tools),
+            ],
+        ]);
     }
 
     /**

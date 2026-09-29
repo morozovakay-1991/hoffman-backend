@@ -44,4 +44,14 @@ class TopicFactory extends Factory
             'cover_image_path' => 'topics/'.fake()->uuid().'.jpg',
         ]);
     }
+
+    /**
+     * Indicate that the topic is the featured (headline) item of its section.
+     */
+    public function featured(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_featured' => true,
+        ]);
+    }
 }
