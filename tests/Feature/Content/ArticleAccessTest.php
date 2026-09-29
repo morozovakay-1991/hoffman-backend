@@ -70,7 +70,7 @@ class ArticleAccessTest extends TestCase
         $response = $this->getJson('/api/v1/articles');
 
         $response->assertOk();
-        collect($response->json('data'))->each(
+        collect($response->json('data.items'))->each(
             fn (array $article) => $this->assertFalse($article['is_locked']),
         );
     }
@@ -83,7 +83,7 @@ class ArticleAccessTest extends TestCase
         $response = $this->getJson('/api/v1/articles');
 
         $response->assertOk();
-        collect($response->json('data'))->each(
+        collect($response->json('data.items'))->each(
             fn (array $article) => $this->assertArrayHasKey('is_new', $article),
         );
     }

@@ -57,6 +57,9 @@ class ToolResource extends Resource
                     ->image(),
                 Toggle::make('is_published')
                     ->label('Опубликован'),
+                Toggle::make('is_featured')
+                    ->label('Заглавный')
+                    ->helperText('Показывается отдельно в начале раздела. Может быть только один — отметка снимется с предыдущего.'),
                 TextInput::make('sort_order')
                     ->label('Порядок сортировки')
                     ->numeric()
@@ -78,6 +81,9 @@ class ToolResource extends Resource
                     ->sortable(),
                 IconColumn::make('is_published')
                     ->label('Опубликован')
+                    ->boolean(),
+                IconColumn::make('is_featured')
+                    ->label('Заглавный')
                     ->boolean(),
                 TextColumn::make('stage_tag')
                     ->label('Ступень')

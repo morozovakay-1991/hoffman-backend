@@ -44,4 +44,14 @@ class ToolFactory extends Factory
             'cover_image_path' => 'tools/'.fake()->uuid().'.jpg',
         ]);
     }
+
+    /**
+     * Indicate that the tool is the featured (headline) item of its section.
+     */
+    public function featured(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_featured' => true,
+        ]);
+    }
 }

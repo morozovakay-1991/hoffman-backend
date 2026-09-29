@@ -46,4 +46,14 @@ class ArticleFactory extends Factory
             'is_new' => true,
         ]);
     }
+
+    /**
+     * Indicate that the article is the featured (headline) item of its section.
+     */
+    public function featured(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_featured' => true,
+        ]);
+    }
 }

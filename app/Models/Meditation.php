@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasExclusiveFeatured;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,6 +12,8 @@ class Meditation extends Model
 {
     /** @use HasFactory<\Database\Factories\MeditationFactory> */
     use HasFactory;
+
+    use HasExclusiveFeatured;
 
     use HasTranslations;
 
@@ -28,6 +31,7 @@ class Meditation extends Model
         'duration_seconds',
         'is_free',
         'is_published',
+        'is_featured',
         'sort_order',
     ];
 
@@ -51,6 +55,7 @@ class Meditation extends Model
             'duration_seconds' => 'integer',
             'is_free' => 'boolean',
             'is_published' => 'boolean',
+            'is_featured' => 'boolean',
             'sort_order' => 'integer',
         ];
     }

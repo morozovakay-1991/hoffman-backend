@@ -8,8 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\TopicResource;
 use App\Models\Topic;
 use Dedoc\Scramble\Attributes\Group;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 #[Group(name: 'Topics', description: 'Content topics (categories grouping meditations and tools). Public — access to each item is subscription-gated per request, not by authentication, so both guests and logged-in users may call these.')]
 class TopicController extends Controller
@@ -25,11 +25,18 @@ class TopicController extends Controller
      *
      * See App\Http\Controllers\Api\V1\MeditationController::index() for the
      * locked-but-visible access decision applied here (is_locked flag instead of
-     * hiding inaccessible records).
+     * hiding inaccessible records), and for the `featured` / `items` split.
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
         $user = $request->user('sanctum');
+
+        $featured = $this->contentCatalogService->getFeatured(
+            Topic::class,
+            AccessLevelService::CONTENT_TOPIC,
+            $user,
+            ['meditations', 'tools'],
+        );
 
         $topics = $this->contentCatalogService->listPublishedWithLockFlag(
             Topic::class,
@@ -38,7 +45,12 @@ class TopicController extends Controller
             ['meditations', 'tools'],
         );
 
-        return TopicResource::collection($topics);
+        return response()->json([
+            'data' => [
+                'featured' => $featured ? new TopicResource($featured) : null,
+                'items' => TopicResource::collection($topics),
+            ],
+        ]);
     }
 
     /**

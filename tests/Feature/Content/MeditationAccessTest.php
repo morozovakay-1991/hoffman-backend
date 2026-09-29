@@ -21,7 +21,7 @@ class MeditationAccessTest extends TestCase
         $response = $this->getJson('/api/v1/meditations');
         $response->assertOk();
 
-        $items = collect($response->json('data'))->keyBy('id');
+        $items = collect($response->json('data.items'))->keyBy('id');
 
         $this->assertFalse($items[$free->id]['is_locked']);
         $this->assertTrue($items[$paid->id]['is_locked']);
@@ -100,7 +100,7 @@ class MeditationAccessTest extends TestCase
 
         $this->assertSame(
             [$first->id, $second->id, $third->id],
-            collect($response->json('data'))->pluck('id')->all(),
+            collect($response->json('data.items'))->pluck('id')->all(),
         );
     }
 

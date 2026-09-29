@@ -11,7 +11,6 @@ use App\Models\Meditation;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 #[Group(name: 'Meditations', description: 'Guided meditation catalogue. Public — access to each item is subscription-gated per request, not by authentication, so both guests and logged-in users may call these.')]
 class MeditationController extends Controller
@@ -32,10 +31,22 @@ class MeditationController extends Controller
      * This lets clients render a paywalled catalogue (title, short description, lock
      * icon) instead of silently shrinking the list, which is better for discovery and
      * conversion than omitting locked items entirely.
+     *
+     * The response is split into `featured` (the headline meditation, or null if none
+     * is assigned) and `items` (every other published meditation, by sort_order). The
+     * featured meditation never appears in `items`, and is flagged `is_locked` by the
+     * same rule as the rest.
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
         $user = $request->user('sanctum');
+
+        $featured = $this->contentCatalogService->getFeatured(
+            Meditation::class,
+            AccessLevelService::CONTENT_MEDITATION,
+            $user,
+            ['topics'],
+        );
 
         $meditations = $this->contentCatalogService->listPublishedWithLockFlag(
             Meditation::class,
@@ -44,7 +55,12 @@ class MeditationController extends Controller
             ['topics'],
         );
 
-        return MeditationResource::collection($meditations);
+        return response()->json([
+            'data' => [
+                'featured' => $featured ? new MeditationResource($featured) : null,
+                'items' => MeditationResource::collection($meditations),
+            ],
+        ]);
     }
 
     /**

@@ -59,6 +59,9 @@ class TopicResource extends Resource
                     ->image(),
                 Toggle::make('is_published')
                     ->label('Опубликована'),
+                Toggle::make('is_featured')
+                    ->label('Заглавная')
+                    ->helperText('Показывается отдельно в начале раздела. Может быть только один — отметка снимется с предыдущего.'),
                 TextInput::make('sort_order')
                     ->label('Порядок сортировки')
                     ->numeric()
@@ -97,6 +100,9 @@ class TopicResource extends Resource
                     ->sortable(),
                 IconColumn::make('is_published')
                     ->label('Опубликована')
+                    ->boolean(),
+                IconColumn::make('is_featured')
+                    ->label('Заглавная')
                     ->boolean(),
                 TextColumn::make('updated_at')
                     ->label('Обновлена')

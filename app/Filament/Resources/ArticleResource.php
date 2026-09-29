@@ -58,6 +58,9 @@ class ArticleResource extends Resource
                     ->label('Дата публикации'),
                 Toggle::make('is_published')
                     ->label('Опубликована'),
+                Toggle::make('is_featured')
+                    ->label('Заглавная')
+                    ->helperText('Показывается отдельно в начале раздела. Может быть только один — отметка снимется с предыдущего.'),
                 Toggle::make('is_new')
                     ->label('Новая'),
             ]);
@@ -77,6 +80,9 @@ class ArticleResource extends Resource
                     ->sortable(),
                 IconColumn::make('is_published')
                     ->label('Опубликована')
+                    ->boolean(),
+                IconColumn::make('is_featured')
+                    ->label('Заглавная')
                     ->boolean(),
                 IconColumn::make('is_new')
                     ->label('Новая')

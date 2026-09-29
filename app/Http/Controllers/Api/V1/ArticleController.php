@@ -8,8 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ArticleResource;
 use App\Models\Article;
 use Dedoc\Scramble\Attributes\Group;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 #[Group(name: 'Articles', description: 'Article catalogue. Public — articles are always accessible regardless of subscription, so both guests and logged-in users may call these.')]
 class ArticleController extends Controller
@@ -26,12 +26,27 @@ class ArticleController extends Controller
      * Articles are always accessible (see AccessLevelService::canAccess()), so no
      * per-item check or is_locked flag is needed here; show() below still routes
      * through the service so that rule stays defined in a single place.
+     *
+     * The response is split into `featured` (the headline article, or null if
+     * none is assigned) and `items` (every other published article); the
+     * featured article never appears in `items`.
      */
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
+        $featured = $this->contentCatalogService->getFeatured(
+            Article::class,
+            AccessLevelService::CONTENT_ARTICLE,
+            $request->user('sanctum'),
+        );
+
         $articles = $this->contentCatalogService->listPublished(Article::class);
 
-        return ArticleResource::collection($articles);
+        return response()->json([
+            'data' => [
+                'featured' => $featured ? new ArticleResource($featured) : null,
+                'items' => ArticleResource::collection($articles),
+            ],
+        ]);
     }
 
     /**

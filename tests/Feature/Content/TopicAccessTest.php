@@ -21,7 +21,7 @@ class TopicAccessTest extends TestCase
 
         $response->assertOk();
 
-        $items = collect($response->json('data'))->keyBy('id');
+        $items = collect($response->json('data.items'))->keyBy('id');
         $this->assertTrue($items[$topic->id]['is_locked']);
         $this->assertNull($items[$topic->id]['full_description']);
     }
@@ -87,7 +87,7 @@ class TopicAccessTest extends TestCase
 
         $this->assertSame(
             [$first->id, $second->id, $third->id],
-            collect($response->json('data'))->pluck('id')->all(),
+            collect($response->json('data.items'))->pluck('id')->all(),
         );
     }
 

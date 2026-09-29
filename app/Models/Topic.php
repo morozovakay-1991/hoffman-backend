@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasExclusiveFeatured;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,6 +12,8 @@ class Topic extends Model
 {
     /** @use HasFactory<\Database\Factories\TopicFactory> */
     use HasFactory;
+
+    use HasExclusiveFeatured;
 
     use HasTranslations;
 
@@ -25,6 +28,7 @@ class Topic extends Model
         'full_description',
         'cover_image_path',
         'is_published',
+        'is_featured',
         'sort_order',
     ];
 
@@ -46,6 +50,7 @@ class Topic extends Model
     {
         return [
             'is_published' => 'boolean',
+            'is_featured' => 'boolean',
             'sort_order' => 'integer',
         ];
     }
