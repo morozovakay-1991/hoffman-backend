@@ -132,7 +132,7 @@ class FeaturedContentTest extends TestCase
             ->assertJsonPath('data.featured.audio_path', $featured->audio_path);
     }
 
-    public function test_inaccessible_featured_tool_and_topic_are_returned_locked_for_a_user_without_subscription(): void
+    public function test_featured_tool_and_topic_are_unlocked_for_a_user_without_subscription(): void
     {
         $user = User::factory()->create();
         $tool = Tool::factory()->featured()->create();
@@ -141,14 +141,14 @@ class FeaturedContentTest extends TestCase
         $this->actingAsApiUser($user)->getJson('/api/v1/tools')
             ->assertOk()
             ->assertJsonPath('data.featured.id', $tool->id)
-            ->assertJsonPath('data.featured.is_locked', true)
-            ->assertJsonPath('data.featured.full_description', null);
+            ->assertJsonPath('data.featured.is_locked', false)
+            ->assertJsonPath('data.featured.full_description', $tool->full_description);
 
         $this->actingAsApiUser($user)->getJson('/api/v1/topics')
             ->assertOk()
             ->assertJsonPath('data.featured.id', $topic->id)
-            ->assertJsonPath('data.featured.is_locked', true)
-            ->assertJsonPath('data.featured.full_description', null);
+            ->assertJsonPath('data.featured.is_locked', false)
+            ->assertJsonPath('data.featured.full_description', $topic->full_description);
     }
 
     public function test_featured_items_are_unlocked_for_a_subscriber(): void

@@ -63,6 +63,8 @@ class HomeTest extends TestCase
         $freeMeditation = Meditation::factory()->free()->create();
         Meditation::factory()->create(); // paid, inaccessible to a guest
         Article::factory()->create();
+        $tool = Tool::factory()->create(); // tools and topics are always accessible
+        $topic = Topic::factory()->create();
 
         $response = $this->getJson('/api/v1/home');
         $response->assertOk();
@@ -72,6 +74,10 @@ class HomeTest extends TestCase
         $this->assertTrue($meditationIds->contains($freeMeditation->id));
         $this->assertCount(1, $meditationIds);
         $this->assertCount(1, $response->json('data.articles.items'));
+        $this->assertSame([$tool->id], collect($response->json('data.tools.items'))->pluck('id')->all());
+        $this->assertSame([$topic->id], collect($response->json('data.topics.items'))->pluck('id')->all());
+        $response->assertJsonPath('data.tools.items.0.is_locked', false)
+            ->assertJsonPath('data.topics.items.0.is_locked', false);
 
         $response->assertJsonPath('data.diary_progress.is_available', false)
             ->assertJsonPath('data.diary_progress.current_day', null)
@@ -210,7 +216,7 @@ class HomeTest extends TestCase
         );
     }
 
-    public function test_inaccessible_featured_item_is_returned_locked_for_a_guest(): void
+    public function test_inaccessible_featured_meditation_is_returned_locked_for_a_guest_while_tool_and_topic_are_unlocked(): void
     {
         $meditation = Meditation::factory()->featured()->create(); // paid
         $tool = Tool::factory()->featured()->create();
@@ -225,11 +231,11 @@ class HomeTest extends TestCase
             ->assertJsonPath('data.meditations.featured.audio_path', null)
             ->assertJsonPath('data.meditations.featured.full_description', null)
             ->assertJsonPath('data.tools.featured.id', $tool->id)
-            ->assertJsonPath('data.tools.featured.is_locked', true)
-            ->assertJsonPath('data.tools.featured.full_description', null)
+            ->assertJsonPath('data.tools.featured.is_locked', false)
+            ->assertJsonPath('data.tools.featured.full_description', $tool->full_description)
             ->assertJsonPath('data.topics.featured.id', $topic->id)
-            ->assertJsonPath('data.topics.featured.is_locked', true)
-            ->assertJsonPath('data.topics.featured.full_description', null);
+            ->assertJsonPath('data.topics.featured.is_locked', false)
+            ->assertJsonPath('data.topics.featured.full_description', $topic->full_description);
 
         // Regular items remain accessible-only.
         $this->assertSame([$freeMeditation->id], collect($response->json('data.meditations.items'))->pluck('id')->all());

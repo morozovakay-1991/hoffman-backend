@@ -14,13 +14,17 @@ use Illuminate\Database\Eloquent\Model;
  *
  * Access levels, from lowest to highest:
  *  - none:      no authenticated user, or no currently active subscription.
- *               Only free meditations (is_free=true) and articles are available.
+ *               Only free meditations (is_free=true) are available, plus the
+ *               always-accessible types below.
  *  - subscribed: an active subscription, but graduate_status is not "confirmed".
- *               Meditations, tools and topics are fully available; diary content is not.
+ *               All meditations are available; diary content is not.
  *  - confirmed:  an active subscription and graduate_status is "confirmed".
- *               Everything is available.
+ *               Everything is available, including the diary.
  *
- * Articles are always accessible, regardless of authentication or subscription state.
+ * Articles, tools and topics are always accessible, regardless of authentication
+ * or subscription state. For tools and topics this is a deliberate product
+ * decision that departs from section 4.1 of the spec (which gates tools behind
+ * a subscription).
  */
 class AccessLevelService
 {
@@ -40,7 +44,7 @@ class AccessLevelService
      */
     public function canAccess(?User $user, string $contentType, Model $content): bool
     {
-        if ($contentType === self::CONTENT_ARTICLE) {
+        if (in_array($contentType, [self::CONTENT_ARTICLE, self::CONTENT_TOOL, self::CONTENT_TOPIC], true)) {
             return true;
         }
 
