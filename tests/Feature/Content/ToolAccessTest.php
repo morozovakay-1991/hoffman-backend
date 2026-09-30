@@ -13,7 +13,7 @@ class ToolAccessTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_sees_tools_locked_in_the_list(): void
+    public function test_guest_sees_tools_unlocked_in_the_list(): void
     {
         $tool = Tool::factory()->create(['stage_tag' => 'stage-1']);
 
@@ -22,22 +22,37 @@ class ToolAccessTest extends TestCase
         $response->assertOk();
 
         $items = collect($response->json('data.items'))->keyBy('id');
-        $this->assertTrue($items[$tool->id]['is_locked']);
-        $this->assertNull($items[$tool->id]['full_description']);
+        $this->assertFalse($items[$tool->id]['is_locked']);
+        $this->assertSame($tool->full_description, $items[$tool->id]['full_description']);
         $this->assertSame('stage-1', $items[$tool->id]['stage_tag']);
     }
 
-    public function test_guest_is_denied_a_tool(): void
+    public function test_guest_can_view_a_tool(): void
     {
         $tool = Tool::factory()->create();
 
         $response = $this->getJson("/api/v1/tools/{$tool->id}");
 
-        $response->assertStatus(403)
-            ->assertJsonPath('error.code', 'ACCESS_DENIED');
+        $response->assertOk()
+            ->assertJsonPath('data.is_locked', false)
+            ->assertJsonPath('data.full_description', $tool->full_description);
     }
 
-    public function test_user_without_subscription_is_denied_a_tool(): void
+    public function test_user_without_subscription_sees_tools_unlocked_in_the_list(): void
+    {
+        $user = User::factory()->create();
+        $tool = Tool::factory()->create();
+
+        $response = $this->actingAsApiUser($user)->getJson('/api/v1/tools');
+
+        $response->assertOk();
+
+        $items = collect($response->json('data.items'))->keyBy('id');
+        $this->assertFalse($items[$tool->id]['is_locked']);
+        $this->assertSame($tool->full_description, $items[$tool->id]['full_description']);
+    }
+
+    public function test_user_without_subscription_can_view_a_tool(): void
     {
         $user = User::factory()->create();
         $tool = Tool::factory()->create();
@@ -45,8 +60,22 @@ class ToolAccessTest extends TestCase
         $response = $this->actingAsApiUser($user)
             ->getJson("/api/v1/tools/{$tool->id}");
 
-        $response->assertStatus(403)
-            ->assertJsonPath('error.code', 'ACCESS_DENIED');
+        $response->assertOk()
+            ->assertJsonPath('data.is_locked', false)
+            ->assertJsonPath('data.full_description', $tool->full_description);
+    }
+
+    public function test_user_with_expired_subscription_can_view_a_tool(): void
+    {
+        $user = User::factory()->create();
+        Subscription::factory()->for($user)->expired()->create();
+        $tool = Tool::factory()->create();
+
+        $response = $this->actingAsApiUser($user)
+            ->getJson("/api/v1/tools/{$tool->id}");
+
+        $response->assertOk()
+            ->assertJsonPath('data.is_locked', false);
     }
 
     public function test_subscribed_non_confirmed_graduate_can_view_a_tool(): void

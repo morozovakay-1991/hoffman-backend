@@ -23,7 +23,7 @@ class AccessLevelServiceTest extends TestCase
         $this->service = new AccessLevelService();
     }
 
-    public function test_guest_can_access_only_free_meditations_and_articles(): void
+    public function test_guest_can_access_free_meditations_articles_tools_and_topics(): void
     {
         $free = Meditation::factory()->free()->make();
         $paid = Meditation::factory()->make();
@@ -31,8 +31,8 @@ class AccessLevelServiceTest extends TestCase
         $this->assertTrue($this->service->canAccess(null, AccessLevelService::CONTENT_MEDITATION, $free));
         $this->assertFalse($this->service->canAccess(null, AccessLevelService::CONTENT_MEDITATION, $paid));
         $this->assertTrue($this->service->canAccess(null, AccessLevelService::CONTENT_ARTICLE, $paid));
-        $this->assertFalse($this->service->canAccess(null, AccessLevelService::CONTENT_TOOL, $paid));
-        $this->assertFalse($this->service->canAccess(null, AccessLevelService::CONTENT_TOPIC, $paid));
+        $this->assertTrue($this->service->canAccess(null, AccessLevelService::CONTENT_TOOL, $paid));
+        $this->assertTrue($this->service->canAccess(null, AccessLevelService::CONTENT_TOPIC, $paid));
         $this->assertFalse($this->service->canAccess(null, AccessLevelService::CONTENT_DIARY, $paid));
     }
 
@@ -44,6 +44,9 @@ class AccessLevelServiceTest extends TestCase
 
         $this->assertFalse($this->service->canAccess($user, AccessLevelService::CONTENT_MEDITATION, $paid));
         $this->assertTrue($this->service->canAccess($user, AccessLevelService::CONTENT_ARTICLE, $paid));
+        $this->assertTrue($this->service->canAccess($user, AccessLevelService::CONTENT_TOOL, $paid));
+        $this->assertTrue($this->service->canAccess($user, AccessLevelService::CONTENT_TOPIC, $paid));
+        $this->assertFalse($this->service->canAccess($user, AccessLevelService::CONTENT_DIARY, $user));
     }
 
     public function test_user_with_a_subscription_in_grace_period_is_treated_as_subscribed(): void

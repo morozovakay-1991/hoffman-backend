@@ -13,7 +13,7 @@ class TopicAccessTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_sees_topics_locked_in_the_list(): void
+    public function test_guest_sees_topics_unlocked_in_the_list(): void
     {
         $topic = Topic::factory()->create();
 
@@ -22,21 +22,36 @@ class TopicAccessTest extends TestCase
         $response->assertOk();
 
         $items = collect($response->json('data.items'))->keyBy('id');
-        $this->assertTrue($items[$topic->id]['is_locked']);
-        $this->assertNull($items[$topic->id]['full_description']);
+        $this->assertFalse($items[$topic->id]['is_locked']);
+        $this->assertSame($topic->full_description, $items[$topic->id]['full_description']);
     }
 
-    public function test_guest_is_denied_a_topic(): void
+    public function test_guest_can_view_a_topic(): void
     {
         $topic = Topic::factory()->create();
 
         $response = $this->getJson("/api/v1/topics/{$topic->id}");
 
-        $response->assertStatus(403)
-            ->assertJsonPath('error.code', 'ACCESS_DENIED');
+        $response->assertOk()
+            ->assertJsonPath('data.is_locked', false)
+            ->assertJsonPath('data.full_description', $topic->full_description);
     }
 
-    public function test_user_without_subscription_is_denied_a_topic(): void
+    public function test_user_without_subscription_sees_topics_unlocked_in_the_list(): void
+    {
+        $user = User::factory()->create();
+        $topic = Topic::factory()->create();
+
+        $response = $this->actingAsApiUser($user)->getJson('/api/v1/topics');
+
+        $response->assertOk();
+
+        $items = collect($response->json('data.items'))->keyBy('id');
+        $this->assertFalse($items[$topic->id]['is_locked']);
+        $this->assertSame($topic->full_description, $items[$topic->id]['full_description']);
+    }
+
+    public function test_user_without_subscription_can_view_a_topic(): void
     {
         $user = User::factory()->create();
         $topic = Topic::factory()->create();
@@ -44,8 +59,22 @@ class TopicAccessTest extends TestCase
         $response = $this->actingAsApiUser($user)
             ->getJson("/api/v1/topics/{$topic->id}");
 
-        $response->assertStatus(403)
-            ->assertJsonPath('error.code', 'ACCESS_DENIED');
+        $response->assertOk()
+            ->assertJsonPath('data.is_locked', false)
+            ->assertJsonPath('data.full_description', $topic->full_description);
+    }
+
+    public function test_user_with_expired_subscription_can_view_a_topic(): void
+    {
+        $user = User::factory()->create();
+        Subscription::factory()->for($user)->expired()->create();
+        $topic = Topic::factory()->create();
+
+        $response = $this->actingAsApiUser($user)
+            ->getJson("/api/v1/topics/{$topic->id}");
+
+        $response->assertOk()
+            ->assertJsonPath('data.is_locked', false);
     }
 
     public function test_subscribed_non_confirmed_graduate_can_view_a_topic(): void

@@ -97,7 +97,7 @@ class CoverImageTest extends TestCase
         $this->assertSame($first, $second);
     }
 
-    public function test_locked_items_in_catalogue_lists_still_expose_the_cover_url(): void
+    public function test_catalogue_lists_expose_the_cover_url_for_locked_and_unlocked_items(): void
     {
         Meditation::factory()->create(['cover_image_path' => 'meditations/covers/paid.jpg']);
         Tool::factory()->create(['cover_image_path' => 'tools/anger.jpg']);
@@ -110,12 +110,12 @@ class CoverImageTest extends TestCase
 
         $this->getJson('/api/v1/tools')
             ->assertOk()
-            ->assertJsonPath('data.items.0.is_locked', true)
+            ->assertJsonPath('data.items.0.is_locked', false)
             ->assertJsonPath('data.items.0.cover_image_url', 'https://minio.local/hoffman/tools/anger.jpg');
 
         $this->getJson('/api/v1/topics')
             ->assertOk()
-            ->assertJsonPath('data.items.0.is_locked', true)
+            ->assertJsonPath('data.items.0.is_locked', false)
             ->assertJsonPath('data.items.0.cover_image_url', 'https://minio.local/hoffman/topics/boundaries.jpg');
     }
 

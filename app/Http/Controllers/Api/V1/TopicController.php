@@ -11,7 +11,7 @@ use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-#[Group(name: 'Topics', description: 'Content topics (categories grouping meditations and tools). Public — access to each item is subscription-gated per request, not by authentication, so both guests and logged-in users may call these.')]
+#[Group(name: 'Topics', description: 'Content topics (categories grouping meditations and tools). Public and always accessible — no authentication or subscription required; `is_locked` is always false.')]
 class TopicController extends Controller
 {
     public function __construct(
@@ -56,9 +56,9 @@ class TopicController extends Controller
     /**
      * Show a single topic.
      *
-     * Unlike the list endpoint, a direct request for one item is explicitly
-     * denied (`403 ACCESS_DENIED`) rather than flagged, since the caller
-     * already knows which item they asked for.
+     * Topics are always accessible (see AccessLevelService::canAccess()),
+     * so `403 ACCESS_DENIED` is never returned in practice; the check is kept
+     * for consistency with other content types.
      */
     public function show(Request $request, Topic $topic): TopicResource
     {
